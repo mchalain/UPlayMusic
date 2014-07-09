@@ -29,15 +29,15 @@ struct upnp_device_descriptor {
 	int (*init_function) (void);
 	void (*shutdown_function) (void);
         const char *device_type;
-        const char *friendly_name;
+        char *friendly_name;
         const char *manufacturer;
         const char *manufacturer_url;
         const char *model_description;
         const char *model_name;
         const char *model_number;
         const char *model_url;
-        const char *serial_number;
-        const char *udn;
+        char *serial_number;
+        char *udn;
         const char *upc;
         const char *presentation_url;
 	struct icon **icons;

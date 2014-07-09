@@ -269,7 +269,7 @@ struct upnp * upnp_start(char *name, char *uuid, char *serial_number, char *ip_a
 	memset(upnp, 0, sizeof(*upnp));
 	init_logging(log_file);
 
-	upnp->renderer = upnp_renderer_descriptor(name, uuid);
+	upnp->renderer = upnp_renderer_descriptor(name, uuid, serial_number);
 	if (upnp->renderer == NULL) {
 		return NULL;
 	}

@@ -41,7 +41,7 @@
 #include <upnp/upnp.h>
 #include <upnp/ithread.h>
 
-#include "webserver.h"
+#include "logging.h"
 #include "upnp.h"
 #include "upnp_device.h"
 #include "upnp_connmgr.h"
@@ -49,7 +49,6 @@
 #include "upnp_transport.h"
 
 #include "upnp_renderer.h"
-#include "git-version.h"
 
 static struct icon icon1 = {
         .width =        64,
@@ -79,15 +78,15 @@ static struct upnp_device_descriptor render_device = {
 	.init_function          = upnp_renderer_init,
 	.shutdown_function          = upnp_renderer_shutdown,
         .device_type            = "urn:schemas-upnp-org:device:MediaRenderer:1",
-        .friendly_name          = "GMediaRender",
-        .manufacturer           = "Ivo Clarysse, Henner Zeller",
-        .manufacturer_url       = "http://github.com/hzeller/gmrender-resurrect",
+        .friendly_name          = NULL,
+        .manufacturer           = PACKAGE_MANUFACTURER,
+        .manufacturer_url       = PACKAGE_MANUFACTURER_URL,
         .model_description      = PACKAGE_STRING,
         .model_name             = PACKAGE_NAME,
-        .model_number           = GM_COMPILE_VERSION,
-        .model_url              = "http://github.com/hzeller/gmrender-resurrect",
-        .serial_number          = "1",
-        .udn                    = "uuid:GMediaRender-1_0-000-000-002",
+        .model_number           = PACKAGE_VERSION,
+        .model_url              = PACKAGE_URL,
+        .serial_number          = NULL,
+        .udn                    = NULL,
         .upc                    = "",
         .presentation_url       = "",  // TODO(hzeller) show something useful.
         .icons                  = renderer_icon,
@@ -134,11 +133,13 @@ static void upnp_renderer_shutdown(void)
 
 struct upnp_device_descriptor *
 upnp_renderer_descriptor(const char *friendly_name,
-			 const char *uuid)
+			 const char *uuid,
+			 const char *serial_number)
 {
 	char *udn;
 
-	render_device.friendly_name = friendly_name;
+	render_device.friendly_name = (char *)friendly_name;
+	render_device.serial_number = (char *)serial_number;
 
 	asprintf(&udn, "uuid:%s", uuid);
 	render_device.udn = udn;
