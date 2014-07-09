@@ -24,6 +24,8 @@
 #ifndef _UPNP_H
 #define _UPNP_H
 
+#include <upnp/ithread.h>
+
 struct action;
 struct service;
 struct action_event;
