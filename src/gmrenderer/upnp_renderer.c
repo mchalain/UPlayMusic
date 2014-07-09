@@ -76,6 +76,7 @@ static int upnp_renderer_init(void);
 
 static struct upnp_device_descriptor render_device = {
 	.init_function          = upnp_renderer_init,
+	.shutdown_function          = upnp_renderer_shutdown,
         .device_type            = "urn:schemas-upnp-org:device:MediaRenderer:1",
         .friendly_name          = "GMediaRender",
         .manufacturer           = "Ivo Clarysse, Henner Zeller",
@@ -121,7 +122,13 @@ static int upnp_renderer_init(void)
 	upnp_services[2] = upnp_control_get_service();
 	upnp_services[3] = NULL;
 	render_device.services = upnp_services;
-        return connmgr_init();
+	return connmgr_init();
+}
+
+static void upnp_renderer_shutdown(void)
+{
+	if (render_device.udn)
+		free(render_device.udn);
 }
 
 struct upnp_device_descriptor *

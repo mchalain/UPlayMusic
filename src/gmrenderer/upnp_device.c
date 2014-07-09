@@ -503,6 +503,9 @@ struct upnp_device *upnp_device_init(struct upnp_device_descriptor *device_def,
 }
 
 void upnp_device_shutdown(struct upnp_device *device) {
+	if (device->upnp_device_descriptor->shutdown_function) {
+			device->upnp_device_descriptor->shutdown_function();
+		}
 	UpnpFinish();
 }
 

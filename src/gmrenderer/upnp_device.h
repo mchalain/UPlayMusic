@@ -27,6 +27,7 @@
 
 struct upnp_device_descriptor {
 	int (*init_function) (void);
+	void (*shutdown_function) (void);
         const char *device_type;
         const char *friendly_name;
         const char *manufacturer;
