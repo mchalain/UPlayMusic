@@ -19,7 +19,7 @@ song-meta-data.c
 $(foreach s, $(mupnp_SOURCES),$(eval $(mupnp_SUBDIR)/$(s:%.c=%)_CFLAGS:=$(mupnp_CFLAGS)) )
 
 lib-$(CONFIG_WEBSERVER_MUPNP)+=webserver
-webserver_SUBDIR:=mupnp
+webserver_SUBDIR:=gmrenderer
 webserver_CFLAGS:=-std=gnu99 -DPILOT_LOGGING
 
 $(foreach s, webserver,$(eval $(webserver_SUBDIR)/$(s:%.c=%)_CFLAGS:=$(webserver_CFLAGS)) )
