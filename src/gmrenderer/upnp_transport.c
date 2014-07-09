@@ -777,7 +777,12 @@ static void *thread_update_track_time(void *userdata) {
 	char tbuf[32];
 	int64_t last_duration = -1, last_position = -1;
 	for (;;) {
-		usleep(500000);  // 500ms
+		struct timespec timout =
+		{
+			.tv_sec = 1,
+			.tv_nsec = 0,
+		};
+		nanosleep(&timout, NULL);  // 1 s
 		service_lock();
 		int64_t duration, position;
 		const int pos_result = output_get_position(&duration, &position);
