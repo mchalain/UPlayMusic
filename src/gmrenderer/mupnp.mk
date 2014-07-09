@@ -1,5 +1,5 @@
 lib-y+=mupnp
-mupnp_SUBDIR:=mupnp
+mupnp_SUBDIR:=gmrenderer
 mupnp_CFLAGS:=-std=gnu99 -DPILOT_LOGGING
 mupnp_SOURCES:= \
 upnp.c \

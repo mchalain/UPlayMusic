@@ -37,8 +37,12 @@ LDFLAGS+=-L./$(obj)
 all: $(obj) $(targets)
 	@:
 
-$(obj):
-	mkdir -p $@
+define build_dir
+$(1):
+	$(Q)$(shell mkdir -p $(1))
+endef
+
+$(foreach t, $(slib-y) $(lib-y) $(bin-y),$(call build_dir,$(obj)/$($(t)_SUBDIR)))
 
 $(obj)/%.o:$(src)/%.c
 	@$(call cmd,cc_o_c)
@@ -53,14 +57,14 @@ $(lib-static-target): $(obj)/lib%$(slib-ext:%=.%): $$(if $$(%-objs), $$(addprefi
 	@$(call cmd,ld_slib)
 
 $(lib-dynamic-target): CFLAGS+=-fPIC $($*_CFLAGS)
-$(lib-dynamic-target): $(obj)/lib%$(dlib-ext:%=.%): $$(if $$(%-objs), $$(addprefix $(obj)/$$(%_SUBDIR)/,$$(%-objs)), $(obj)/$$(%_SUBDIR)/%.o)
+$(lib-dynamic-target): $(obj)/lib%$(dlib-ext:%=.%): $(obj)/$$(%_SUBDIR) $$(if $$(%-objs), $$(addprefix $(obj)/$$(%_SUBDIR)/,$$(%-objs)), $(obj)/$$(%_SUBDIR)/%.o)
 	@$(call cmd,ld_dlib)
 
 $(modules-target): CFLAGS+=-fPIC $($*_CFLAGS)
-$(modules-target): $(obj)/$(dlib-ext:%=.%): $$(if $$(%-objs), $$(addprefix $(obj)/$$(%_SUBDIR)/,$$(%-objs)), $(obj)/$$(%_SUBDIR)/%.o)
+$(modules-target): $(obj)/$(dlib-ext:%=.%): $(obj)/$$(%_SUBDIR) $$(if $$(%-objs), $$(addprefix $(obj)/$$(%_SUBDIR)/,$$(%-objs)), $(obj)/$$(%_SUBDIR)/%.o)
 	@$(call cmd,ld_dlib)
 
 $(bin-target):CFLAGS+=$($*_CFLAGS)
-$(bin-target): $(obj)/%$(bin-ext:%=.%): $$(if $$(%-objs), $$(addprefix $(obj)/$$(%_SUBDIR)/,$$(%-objs)), $(obj)/$$(%_SUBDIR)/%.o)
+$(bin-target): $(obj)/%$(bin-ext:%=.%): $(obj)/$$(%_SUBDIR) $$(if $$(%-objs), $$(addprefix $(obj)/$$(%_SUBDIR)/,$$(%-objs)), $(obj)/$$(%_SUBDIR)/%.o)
 	@$(call cmd,ld_bin)
 

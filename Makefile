@@ -12,10 +12,10 @@ dlib-ext=so
 include ./config
 
 #CFLAGS=-g
-CFLAGS+=-g -DDEBUG -DHAVE_CONFIG_H -I./include -I./src/grenderer
+CFLAGS+=-g -DDEBUG -DHAVE_CONFIG_H -I./include -I./src/gmrenderer
 STATIC=
 
-include $(src)/grenderer/mupnp.mk
+include $(src)/gmrenderer/mupnp.mk
 
 include ./scripts.mk
 
