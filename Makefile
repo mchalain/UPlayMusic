@@ -18,6 +18,8 @@ STATIC=
 include $(src)/gmrenderer/mupnp.mk
 include $(src)/pilot_atk/pilot_atk.mk
 include $(src)/pilot_mods/pilot_mods.mk
+include $(src)/application.mk
+
 include $(src)/modules/debug.mk
 include $(src)/modules/gstreamer.mk
 include $(src)/modules/mpg123.mk

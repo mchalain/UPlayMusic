@@ -59,6 +59,6 @@ $(modules-target): $(obj)/%$(dlib-ext:%=.%): $$(if $$(%-objs), $$(addprefix $(ob
 	@$(call cmd,ld_dlib)
 
 $(bin-target):CFLAGS+=$($*_CFLAGS)
-$(bin-target): $(obj)/%$(bin-ext:%=.%): $(obj)/$$(%_SUBDIR) $$(if $$(%-objs), $$(addprefix $(obj)/$$(%_SUBDIR)/,$$(%-objs)), $(obj)/$$(%_SUBDIR)/%.o)
+$(bin-target): $(obj)/%$(bin-ext:%=.%): $$(if $$(%-objs), $$(addprefix $(obj)/$$(%_SUBDIR)/,$$(%-objs)), $(obj)/$$(%_SUBDIR)/%.o)
 	@$(call cmd,ld_bin)
 
