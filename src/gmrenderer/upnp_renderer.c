@@ -73,6 +73,7 @@ static struct icon *renderer_icon[] = {
 };
 
 static int upnp_renderer_init(void);
+static void upnp_renderer_shutdown(void);
 
 static struct upnp_device_descriptor render_device = {
 	.init_function          = upnp_renderer_init,
