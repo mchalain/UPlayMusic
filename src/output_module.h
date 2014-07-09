@@ -24,16 +24,32 @@
 #ifndef _OUTPUT_MODULE_H
 #define _OUTPUT_MODULE_H
 
-//#include <glib.h>
-//#define output_option_t GOptionContext
-#define output_option_t void
+#include "song-meta-data.h"
 
-#include "output.h"
+#define OUTPUT	0x0001
+
+struct output_option {
+	char *name;
+	char *value;
+};
+typedef struct output_option output_option_t;
+
+// Feedback for the controlling part what is happening with the
+// output.
+enum PlayFeedback {
+	PLAY_STOPPED,
+	PLAY_STARTED_NEXT_STREAM,
+};
+typedef void (*output_transition_cb_t)(enum PlayFeedback);
+
+// In case the stream gets to know details about the song, this is a
+// callback with changes we send back to the controlling layer.
+typedef void (*output_update_meta_cb_t)(const struct SongMetaData *);
 
 struct output_module {
-        const char *shortname;
-        const char *description;
-	int (*add_options)(output_option_t *ctx);
+	const char *shortname;
+	const char *description;
+	int (*add_options)(struct output_option *ctx);
 
 	// Commands.
 	int (*init)(void);
@@ -42,7 +58,6 @@ struct output_module {
 	int (*play)(output_transition_cb_t transition_callback);
 	int (*stop)(void);
 	int (*pause)(void);
-	int (*loop)(void);
 	int (*seek)(int64_t position_nanos);
 
 	// parameters
@@ -54,8 +69,7 @@ struct output_module {
 };
 
 struct output_module *output_module_get(const char *shortname);
-void output_dump_modules(void);
-int output_loop(void);
+void output_module_dump(void);
 
 #endif
 
