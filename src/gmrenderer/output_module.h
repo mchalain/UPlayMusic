@@ -53,5 +53,9 @@ struct output_module {
 	int (*set_mute)(int);
 };
 
+struct output_module *output_module_get(const char *shortname);
+void output_dump_modules(void);
+int output_loop(void);
+
 #endif
 

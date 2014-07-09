@@ -24,7 +24,6 @@
 #ifndef _OUTPUT_H
 #define _OUTPUT_H
 
-#include "output_module.h"
 #include "song-meta-data.h"
 
 // Feedback for the controlling part what is happening with the
@@ -39,11 +38,10 @@ typedef void (*output_transition_cb_t)(enum PlayFeedback);
 // callback with changes we send back to the controlling layer.
 typedef void (*output_update_meta_cb_t)(const struct SongMetaData *);
 
+#include "output_module.h"
+
 int output_init(const char *shortname);
 int output_add_options(output_option_t *ctx);
-void output_dump_modules(void);
-
-int output_loop(void);
 
 void output_set_uri(const char *uri, output_update_meta_cb_t meta_info);
 void output_set_next_uri(const char *uri);

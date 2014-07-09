@@ -117,4 +117,17 @@ struct action *find_action(struct service *event_service,
 
 char *upnp_get_scpd(struct service *srv);
 
+struct upnp {
+	struct upnp_device_descriptor *renderer;
+	struct upnp_device *device;
+};
+
+struct upnp * upnp_start(char *friendly_name,
+							char *uuid,
+							char *serial_number,
+							char *ip_address,
+							int listen_port,
+							char *output);
+void upnp_stop(struct upnp *upnp);
+
 #endif /* _UPNP_H */

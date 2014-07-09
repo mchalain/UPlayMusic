@@ -33,10 +33,17 @@
 #include <assert.h>
 #include <string.h>
 
+#include <pthread.h>
 #include <upnp/ithread.h>
 
+#include "logging.h"
 #include "xmldoc.h"
+#include "output.h"
 #include "upnp.h"
+#include "upnp_control.h"
+#include "upnp_device.h"
+#include "upnp_renderer.h"
+#include "upnp_transport.h"
 
 static const char *param_datatype_names[] = {
         [DATATYPE_STRING] =     "string",
@@ -224,4 +231,90 @@ char *upnp_get_scpd(struct service *srv)
 	return result;
 }
 
+static void log_variable_change(void *userdata, int var_num,
+				const char *variable_name,
+				const char *old_value,
+				const char *variable_value) {
+	const char *category = (const char*) userdata;
+	int needs_newline = variable_value[strlen(variable_value) - 1] != '\n';
+	// Silly terminal codes. Set to empty strings if not needed.
+	const char *var_start = Log_color_allowed() ? "\033[1m\033[34m" : "";
+	const char *var_end = Log_color_allowed() ? "\033[0m" : "";
+	Log_info(category, "%s%s%s: %s%s",
+		 var_start, variable_name, var_end,
+		 variable_value, needs_newline ? "\n" : "");
+}
 
+static void init_logging(const char *log_file) {
+	if (log_file != NULL) {
+		Log_init(log_file);
+		Log_info("main", "%s log started %s", PACKAGE_STRING, PACKAGE_VERSION);
+
+	} else {
+		fprintf(stderr, "%s started %s.\nLogging switched off. "
+			"Enable with --logfile=<filename> "
+			"(e.g. --logfile=/dev/stdout for console)\n",
+			PACKAGE_STRING, PACKAGE_VERSION);
+	}
+}
+
+struct upnp * upnp_start(char *name, char *uuid, char *serial_number, char *ip_address, int listen_port, char *output)
+{
+	struct upnp *upnp;
+	const char *log_file = "/tmp/mupnp.log";
+	// Now we're going to start threads etc, which means we need
+	// to become a daemon before that.
+
+	upnp = malloc(sizeof(*upnp));
+	memset(upnp, 0, sizeof(*upnp));
+	init_logging(log_file);
+
+	upnp->renderer = upnp_renderer_descriptor(name, uuid);
+	if (upnp->renderer == NULL) {
+		return NULL;
+	}
+
+	if (output_init(output) != 0) {
+		Log_error("main",
+			  "ERROR: Failed to initialize Output subsystem");
+		return NULL;
+	}
+
+	if (listen_port != 0 &&
+	    (listen_port < 49152 || listen_port > 65535)) {
+		// Somewhere obscure internally in libupnp, they clamp the
+		// port to be outside of the IANA range, so at least 49152.
+		// Instead of surprising the user by ignoring lower port
+		// numbers, complain loudly.
+		Log_error("main", "Parameter error: --port needs to be in "
+			  "range [49152..65535] (but was set to %d)",
+			  listen_port);
+		return NULL;
+	}
+	upnp->device = upnp_device_init(upnp->renderer, ip_address, listen_port);
+	if (upnp->device == NULL) {
+		Log_error("main", "ERROR: Failed to initialize UPnP device");
+		return NULL;
+	}
+
+	upnp_transport_init(upnp->device);
+	upnp_control_init(upnp->device);
+
+	if (Log_info_enabled()) {
+		upnp_transport_register_variable_listener(log_variable_change,
+							  (void*) "transport");
+		upnp_control_register_variable_listener(log_variable_change,
+							(void*) "control");
+	}
+
+	return upnp;
+}
+
+void upnp_stop(struct upnp *upnp)
+{
+	if (upnp)
+	{
+		upnp_device_shutdown(upnp->device);
+		free(upnp);
+	}
+}

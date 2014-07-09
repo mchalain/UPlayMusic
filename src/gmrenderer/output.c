@@ -32,8 +32,8 @@
 #include <signal.h>
 
 #include "logging.h"
-#include "output_module.h"
 #include "output.h"
+#include "output_module.h"
 
 static struct output_module *output_module = NULL;
 
@@ -57,10 +57,11 @@ int output_init(const char *shortname)
 	return 0;
 }
 
-int output_add_options(GOptionContext *ctx)
+int output_add_options(output_option_t *ctx)
 {
 	if (output_module && output_module->add_options) {
 		return output_module->add_options(ctx);
+	}
 	return 0;
 }
 

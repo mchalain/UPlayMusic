@@ -153,20 +153,6 @@ static gboolean process_cmdline(int argc, char **argv)
 	return TRUE;
 }
 
-static void log_variable_change(void *userdata, int var_num,
-				const char *variable_name,
-				const char *old_value,
-				const char *variable_value) {
-	const char *category = (const char*) userdata;
-	int needs_newline = variable_value[strlen(variable_value) - 1] != '\n';
-	// Silly terminal codes. Set to empty strings if not needed.
-	const char *var_start = Log_color_allowed() ? "\033[1m\033[34m" : "";
-	const char *var_end = Log_color_allowed() ? "\033[0m" : "";
-	Log_info(category, "%s%s%s: %s%s",
-		 var_start, variable_name, var_end,
-		 variable_value, needs_newline ? "\n" : "");
-}
-
 static void init_logging(const char *log_file) {
 	char *version;
 	asprintf(&version,  "[ gmediarender %s "
@@ -241,39 +227,6 @@ int main(int argc, char **argv)
 		fclose(pid_file_stream);
 	}
 
-	upnp_renderer = upnp_renderer_descriptor(friendly_name, uuid);
-	if (upnp_renderer == NULL) {
-		return EXIT_FAILURE;
-	}
-
-	rc = output_init(output);
-	if (rc != 0) {
-		Log_error("main",
-			  "ERROR: Failed to initialize Output subsystem");
-		return EXIT_FAILURE;
-	}
-
-	struct upnp_device *device;
-	if (listen_port != 0 &&
-	    (listen_port < 49152 || listen_port > 65535)) {
-		// Somewhere obscure internally in libupnp, they clamp the
-		// port to be outside of the IANA range, so at least 49152.
-		// Instead of surprising the user by ignoring lower port
-		// numbers, complain loudly.
-		Log_error("main", "Parameter error: --port needs to be in "
-			  "range [49152..65535] (but was set to %d)",
-			  listen_port);
-		return EXIT_FAILURE;
-	}
-	device = upnp_device_init(upnp_renderer, ip_address, listen_port);
-	if (device == NULL) {
-		Log_error("main", "ERROR: Failed to initialize UPnP device");
-		return EXIT_FAILURE;
-	}
-
-	upnp_transport_init(device);
-	upnp_control_init(device);
-
 	if (show_devicedesc) {
 		// This can only be run after all services have been
 		// initialized.
@@ -282,12 +235,10 @@ int main(int argc, char **argv)
 		fputs(buf, stdout);
 		exit(EXIT_SUCCESS);
 	}
-
-	if (Log_info_enabled()) {
-		upnp_transport_register_variable_listener(log_variable_change,
-							  (void*) "transport");
-		upnp_control_register_variable_listener(log_variable_change,
-							(void*) "control");
+	struct upnp *upnp = upnp_start(friendly_name, uuid, "1234", ip_address, listen_port, output);
+	if (upnp == NULL) {
+		Log_error("main", "ERROR: Failed to initialize UPnP device");
+		return EXIT_FAILURE;
 	}
 
 	// Write both to the log (which might be disabled) and console.
@@ -299,7 +250,7 @@ int main(int argc, char **argv)
 	// We're here, because the loop exited. Probably due to catching
 	// a signal.
 	Log_info("main", "Exiting.");
-	upnp_device_shutdown(device);
+	upnp_stop(upnp);
 
 	return EXIT_SUCCESS;
 }
