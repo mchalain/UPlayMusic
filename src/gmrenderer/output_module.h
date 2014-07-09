@@ -26,10 +26,14 @@
 
 #include "output.h"
 
+//#include <glib.h>
+//#define output_option_t GOptionContext
+#define output_option_t void
+
 struct output_module {
         const char *shortname;
         const char *description;
-	int (*add_options)(GOptionContext *ctx);
+	int (*add_options)(output_option_t *ctx);
 
 	// Commands.
 	int (*init)(void);
@@ -39,10 +43,10 @@ struct output_module {
 	int (*stop)(void);
 	int (*pause)(void);
 	int (*loop)(void);
-	int (*seek)(gint64 position_nanos);
+	int (*seek)(int64_t position_nanos);
 
 	// parameters
-	int (*get_position)(gint64 *track_duration, gint64 *track_pos);
+	int (*get_position)(int64_t *track_duration, int64_t *track_pos);
 	int (*get_volume)(float *);
 	int (*set_volume)(float);
 	int (*get_mute)(int *);

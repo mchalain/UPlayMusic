@@ -260,7 +260,7 @@ static struct UpnpVirtualDirCallbacks virtual_dir_callbacks = {
 	webserver_close
 };
 
-gboolean webserver_register_callbacks(void) {
+char webserver_register_callbacks(void) {
   int rc = UpnpSetVirtualDirCallbacks(&virtual_dir_callbacks);
   if (UPNP_E_SUCCESS != rc) {
     Log_error("webserver", "UpnpSetVirtualDirCallbacks() Error: %s (%d)",
