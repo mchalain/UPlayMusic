@@ -57,11 +57,11 @@ else
 lib-static-target:=$(addprefix $(obj)lib,$(addsuffix $(slib-ext:%=.%),$(slib-y)))
 lib-dynamic-target:=$(addprefix $(obj)lib,$(addsuffix $(dlib-ext:%=.%),$(lib-y)))
 endif
-modules-target:=$(addprefix $(obj),$(addsuffix $(dlib-ext:%=.%),$(modules-y)))
+modules-target:=$(addprefix $(PKGLIBDIR),$(addsuffix $(dlib-ext:%=.%),$(modules-y)))
 bin-target:=$(addprefix $(obj),$(addsuffix $(bin-ext:%=.%),$(bin-y)))
 
 targets:=$(lib-static-target)
-targets:=$(modules-target)
+targets+=$(modules-target)
 targets+=$(lib-dynamic-target)
 targets+=$(bin-target)
 
@@ -102,6 +102,50 @@ $(bin-target): $(obj)%$(bin-ext:%=.%): $$(if $$(%-objs), $$(addprefix $(obj),$$(
 	@$(call cmd,ld_bin)
 
 ##
+# Commands for install
+##
+INSTALL?=install
+PREFIX?=/usr/local
+LIBDIR?=$(PREFIX)/lib
+BINDIR?=$(PREFIX)/bin
+DATADIR=$(PREFIX)/share/$(PACKAGE_NAME)
+PKGLIBDIR?=$(PREFIX)/lib/$(PACKAGE_NAME)
+
+quiet_cmd_install_data=INSTALL $*
+ cmd_install_data=$(Q)$(INSTALL) $< $(DESTDIR:%=%/)$@
+quiet_cmd_install_modules=INSTALL $*
+ cmd_install_modules=$(Q)$(INSTALL) $< $(DESTDIR:%=%/)$@
+quiet_cmd_install_dlib=INSTALL $*
+ cmd_install_dlib=$(Q)$(INSTALL) $< $(DESTDIR:%=%/)$@
+quiet_cmd_install_bin=INSTALL $*
+ cmd_install_bin=$(Q)$(INSTALL) $< $(DESTDIR:%=%/)$@
+
+##
+# install recipes generation
+##
+data-install:=$(addprefix $(DATADIR)/,$(data-y))
+lib-dynamic-install:=$(addprefix $(LIBDIR)/lib,$(addsuffix $(dlib-ext:%=.%),$(lib-y)))
+modules-install:=$(addprefix $(PKGLIBDIR)/,$(addsuffix $(dlib-ext:%=.%),$(modules-y)))
+bin-install:=$(addprefix $(BINDIR)/,$(addsuffix $(bin-ext:%=.%),$(bin-y)))
+
+##
+# install rules
+##
+$(data-install): $(DATADIR)/%: $(addprefix $(src)/$(data-y))
+	@$(call cmd,install_data)
+$(lib-dynamic-install): $(LIBDIR)/lib%$(dlib-ext:%=.%): $(lib-dynamic-target)
+	@$(call cmd,install_dlib)
+$(modules-install): $(PKGLIBDIR)/%$(dlib-ext:%=.%): $(modules-target)
+	@$(call cmd,install_modules)
+$(bin-install): $(BINDIR)/%$(bin-ext:%=.%): $(bin-target)
+	@$(call cmd,install_bin)
+
+install:=$(bin-install)
+install+=$(lib-dynamic-install)
+install+=$(modules-install)
+install+=$(data-install)
+
+##
 # main entries
 ##
 build=$(if $(action),$(action),_build) -f scripts.mk file
@@ -109,8 +153,20 @@ build=$(if $(action),$(action),_build) -f scripts.mk file
 _build: $(obj) $(targets)
 	@:
 
+_install: $(install)
+	@:
+
 _clean:
 	rm -rf $(target-objs)
 
 _distclean: _clean
 	rm -rf $(targets)
+
+clean: action:=_clean
+clean: all
+
+distclean: action:=_distclean
+distclean: all
+
+install: action:=_install
+install: all

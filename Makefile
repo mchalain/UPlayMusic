@@ -28,10 +28,3 @@ all:
 	make $(build)=src/modules/mpg123.mk
 	make $(build)=src/modules/system.mk
 	make $(build)=src/modules/sound_tinyalsa.mk
-
-clean: action:=_clean
-clean: all
-
-distclean: action:=_distclean
-distclean: all
-
