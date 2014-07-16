@@ -1,5 +1,4 @@
 lib-y+=mupnp
-mupnp_SUBDIR:=gmrenderer
 mupnp_CFLAGS:=-std=gnu99 -DPILOT_LOGGING
 mupnp_SOURCES:= \
 upnp.c \
@@ -16,10 +15,5 @@ song-meta-data.c
 
 #mupnp_SOURCES+=logging.c
 
-$(foreach s, $(mupnp_SOURCES),$(eval $(mupnp_SUBDIR)/$(s:%.c=%)_CFLAGS:=$(mupnp_CFLAGS)) )
-
 lib-$(CONFIG_WEBSERVER_MUPNP)+=webserver
-webserver_SUBDIR:=gmrenderer
 webserver_CFLAGS:=-std=gnu99 -DPILOT_LOGGING
-
-$(foreach s, webserver,$(eval $(webserver_SUBDIR)/$(s:%.c=%)_CFLAGS:=$(webserver_CFLAGS)) )

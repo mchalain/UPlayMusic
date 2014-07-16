@@ -14,8 +14,6 @@
 #include "config.h"
 #endif
 
-#include "logging.h"
-#include "upnp_connmgr.h"
 #include "output_module.h"
 
 #include "pilot_list.h"

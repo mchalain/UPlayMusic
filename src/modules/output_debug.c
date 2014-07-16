@@ -3,7 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "upnp_connmgr.h"
+//#include "upnp_connmgr.h"
 #include "output_module.h"
 
 struct st_output_debug

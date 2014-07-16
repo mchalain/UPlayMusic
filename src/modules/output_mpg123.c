@@ -19,7 +19,6 @@
 #include "config.h"
 #endif
 
-#include "upnp_connmgr.h"
 #include "output_module.h"
 #include "sound_module.h"
 

@@ -1,35 +1,37 @@
-obj=obj
-src=src
+OBJTREE:=obj
+export OBJTREE
 srctree=.
 
 bin-y=
 lib-y=
 
-bin-ext=
-slib-ext=a
-dlib-ext=so
-
-include ./config
+CONFIG=./config
+export CONFIG
 
 #CFLAGS=-g
-CFLAGS+=-g -DDEBUG -DHAVE_CONFIG_H -DPILOT_MODULES -I./include -I./src -I./src/gmrenderer
+CFLAGS+=-g -DDEBUG -DHAVE_CONFIG_H -DPILOT_MODULES -I./include
+export CFLAGS
 STATIC=
 
-include $(src)/gmrenderer/mupnp.mk
-include $(src)/pilot_atk/pilot_atk.mk
-include $(src)/pilot_mods/pilot_mods.mk
-include $(src)/application.mk
-
-include $(src)/modules/debug.mk
-include $(src)/modules/gstreamer.mk
-include $(src)/modules/mpg123.mk
-include $(src)/modules/system.mk
-include $(src)/modules/sound_tinyalsa.mk
+DEFAULT: all
 
 include ./scripts.mk
 
-clean:
-	$(RM) $(target-objs)
-distclean: clean
-	$(RM) $(lib-dynamic-target) $(lib-static-target)
+all:
+	make $(build)=src/gmrenderer/mupnp.mk
+	make $(build)=src/pilot_atk/pilot_atk.mk
+	make $(build)=src/pilot_mods/pilot_mods.mk
+	make $(build)=src/application.mk
+
+	make $(build)=src/modules/debug.mk
+	make $(build)=src/modules/gstreamer.mk
+	make $(build)=src/modules/mpg123.mk
+	make $(build)=src/modules/system.mk
+	make $(build)=src/modules/sound_tinyalsa.mk
+
+clean: action:=_clean
+clean: all
+
+distclean: action:=_distclean
+distclean: all
 
