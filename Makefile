@@ -28,3 +28,5 @@ all:
 	make $(build)=src/modules/mpg123.mk
 	make $(build)=src/modules/system.mk
 	make $(build)=src/modules/sound_tinyalsa.mk
+
+	make $(build)=conf.mk

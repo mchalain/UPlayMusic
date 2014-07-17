@@ -46,16 +46,27 @@ quiet_cmd_ld_slib=LD $*
 	$(AR) -cvq $@ $^ > /dev/null && \
 	$(RANLIB) $@
 quiet_cmd_ld_dlib=LD $*
- cmd_ld_dlib=$(Q)$(LD) $(LDFLAGS) $($*_LDFLAGS) -shared $(DLIB_SONAME),$* -o $@ $^ $(addprefix -L,$(RPATH)) $(LIBRARY:%=-l%) $($*_LIBRARY:%=-l%)
+ cmd_ld_dlib=$(Q)$(LD) $(LDFLAGS) $($*_LDFLAGS) -shared $(DLIB_SONAME),$@ -o $@ $^ $(addprefix -L,$(RPATH)) $(LIBRARY:%=-l%) $($*_LIBRARY:%=-l%)
+
+##
+# objects recipes generation
+##
+$(foreach t,$(slib-y) $(lib-y) $(bin-y), $(eval $(t)-objs:=$($(t)_SOURCES:%.c=%.o)))
+$(foreach t,$(slib-y) $(lib-y) $(bin-y), $(eval $(t)-objs:=$($(t)_SOURCES:%.c=%.o)))
+target-objs:=$(foreach t, $(slib-y) $(lib-y) $(bin-y) $(modules-y), $(if $($(t)-objs), $(addprefix $(obj),$($(t)-objs)), $(obj)/$(t).o))
+
+$(foreach t,$(slib-y) $(lib-y) $(bin-y) $(modules-y),$(foreach s, $($(t)_SOURCES),$(eval $(s:%.c=%)_CFLAGS:=$($(t)_CFLAGS))))
 
 ##
 # targets recipes generation
 ##
+slib-y:=$(addprefix lib,$(slib-y))
+lib-y:=$(addprefix lib,$(lib-y))
 ifdef STATIC
-lib-static-target:=$(addprefix $(obj)lib,$(addsuffix $(slib-ext:%=.%),$(slib-y) $(lib-y)))
+lib-static-target:=$(addprefix $(obj),$(addsuffix $(slib-ext:%=.%),$(slib-y) $(lib-y)))
 else
-lib-static-target:=$(addprefix $(obj)lib,$(addsuffix $(slib-ext:%=.%),$(slib-y)))
-lib-dynamic-target:=$(addprefix $(obj)lib,$(addsuffix $(dlib-ext:%=.%),$(lib-y)))
+lib-static-target:=$(addprefix $(obj),$(addsuffix $(slib-ext:%=.%),$(slib-y)))
+lib-dynamic-target:=$(addprefix $(obj),$(addsuffix $(dlib-ext:%=.%),$(lib-y)))
 endif
 modules-target:=$(addprefix $(PKGLIBDIR),$(addsuffix $(dlib-ext:%=.%),$(modules-y)))
 bin-target:=$(addprefix $(obj),$(addsuffix $(bin-ext:%=.%),$(bin-y)))
@@ -64,15 +75,6 @@ targets:=$(lib-static-target)
 targets+=$(modules-target)
 targets+=$(lib-dynamic-target)
 targets+=$(bin-target)
-
-$(foreach t,$(slib-y) $(lib-y) $(bin-y) $(modules-y),$(foreach s, $($(t)_SOURCES),$(eval $(s:%.c=%)_CFLAGS:=$($(t)_CFLAGS))))
-
-##
-# objects recipes generation
-##
-$(foreach t,$(slib-y) $(lib-y) $(bin-y), $(eval $(t)-objs:=$($(t)_SOURCES:%.c=%.o)))
-$(foreach t,$(slib-y) $(lib-y) $(bin-y), $(eval $(t)-objs:=$($(t)_SOURCES:%.c=%.o)))
-target-objs:=$(foreach t, $(slib-y) $(lib-y) $(bin-y) $(modules-y), $(if $($(t)-objs), $(addprefix $(obj),$($(t)-objs)), $(obj)/$(t).o))
 
 ##
 # build rules
@@ -112,32 +114,32 @@ DATADIR=$(PREFIX)/share/$(PACKAGE_NAME)
 PKGLIBDIR?=$(PREFIX)/lib/$(PACKAGE_NAME)
 
 quiet_cmd_install_data=INSTALL $*
- cmd_install_data=$(Q)$(INSTALL) $< $(DESTDIR:%=%/)$@
+ cmd_install_data=$(Q)$(INSTALL) -D $< $(DESTDIR:%=%/)$@
 quiet_cmd_install_modules=INSTALL $*
- cmd_install_modules=$(Q)$(INSTALL) $< $(DESTDIR:%=%/)$@
+ cmd_install_modules=$(Q)$(INSTALL) -D $< $(DESTDIR:%=%/)$@
 quiet_cmd_install_dlib=INSTALL $*
- cmd_install_dlib=$(Q)$(INSTALL) $< $(DESTDIR:%=%/)$@
+ cmd_install_dlib=$(Q)$(INSTALL) -D $< $(DESTDIR:%=%/)$@
 quiet_cmd_install_bin=INSTALL $*
- cmd_install_bin=$(Q)$(INSTALL) $< $(DESTDIR:%=%/)$@
+ cmd_install_bin=$(Q)$(INSTALL) -D $< $(DESTDIR:%=%/)$@
 
 ##
 # install recipes generation
 ##
 data-install:=$(addprefix $(DATADIR)/,$(data-y))
-lib-dynamic-install:=$(addprefix $(LIBDIR)/lib,$(addsuffix $(dlib-ext:%=.%),$(lib-y)))
+lib-dynamic-install:=$(addprefix $(LIBDIR)/,$(addsuffix $(dlib-ext:%=.%),$(lib-y)))
 modules-install:=$(addprefix $(PKGLIBDIR)/,$(addsuffix $(dlib-ext:%=.%),$(modules-y)))
 bin-install:=$(addprefix $(BINDIR)/,$(addsuffix $(bin-ext:%=.%),$(bin-y)))
 
 ##
 # install rules
 ##
-$(data-install): $(DATADIR)/%: $(addprefix $(src)/$(data-y))
+$(data-install): $(DATADIR)/%: $(src)/%
 	@$(call cmd,install_data)
-$(lib-dynamic-install): $(LIBDIR)/lib%$(dlib-ext:%=.%): $(lib-dynamic-target)
+$(lib-dynamic-install): $(LIBDIR)/lib%$(dlib-ext:%=.%): $(obj)lib%$(dlib-ext:%=.%)
 	@$(call cmd,install_dlib)
-$(modules-install): $(PKGLIBDIR)/%$(dlib-ext:%=.%): $(modules-target)
+$(modules-install): $(PKGLIBDIR)/%$(dlib-ext:%=.%): $(obj)%$(dlib-ext:%=.%)
 	@$(call cmd,install_modules)
-$(bin-install): $(BINDIR)/%$(bin-ext:%=.%): $(bin-target)
+$(bin-install): $(BINDIR)/%$(bin-ext:%=.%): $(obj)%$(bin-ext:%=.%)
 	@$(call cmd,install_bin)
 
 install:=$(bin-install)
