@@ -181,7 +181,7 @@ quiet_cmd_config=CONFIG $*
 ##
 build=$(if $(action),$(action),_build) -f scripts.mk file
 
-_build: $(obj) $(targets)
+_build: config.h $(obj) $(targets)
 	@:
 
 _install: $(install)
