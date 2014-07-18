@@ -8,15 +8,11 @@
 #include "config.h"
 #endif
 
-#include "logging.h"
-#include "upnp_connmgr.h"
 #include "output_module.h"
 
 #include "pilot_list.h"
 
-#define CONFIGFILE "output_system.conf"
-#define CONFIGPATH PKG_DATADIR "/"CONFIGFILE
-
+#define MODULE_NAME "output_system"
 struct st_output_system_uri
 {
 	char *uri;
@@ -95,57 +91,38 @@ output_system_parse_cmd(char *cmd, ...)
 	*it = '\0';
 	return cmdline;
 }
-void
-output_system_readconf(char *filepath)
-{
-	FILE *file;
 
-	file = fopen(filepath,"r");
-	if (!file)
+int
+output_system_check(char *line, int len)
+{
+	char *value = malloc(len + 1);
+	if (sscanf(line,"mime=\"%[^\"]", value))
 	{
-		file = fopen("./"CONFIGFILE,"r");
+		g_cmd_mime = value;
 	}
-	if (file)
+	else if (sscanf(line,"init=\"%[^\"]", value))
 	{
-		char *line = NULL;
-		ssize_t len;
-		size_t n=0;
-		len = getline(&line, &n, file);
-		while (len > 0)
-		{
-			char *value = malloc(len + 1);
-			if (sscanf(line,"mime=\"%[^\"]", value))
-			{
-				g_cmd_mime = value;
-			}
-			else if (sscanf(line,"init=\"%[^\"]", value))
-			{
-				g_cmd_init = value;
-			}
-			else if (sscanf(line,"play=\"%[^\"]", value))
-			{
-				g_cmd_play = value;
-			}
-			else if (sscanf(line,"stop=\"%[^\"]", value))
-			{
-				g_cmd_stop = value;
-			}
-			else if (sscanf(line,"pause=\"%[^\"]", value))
-			{
-				g_cmd_pause = value;
-			}
-			free(line);
-			line = NULL;
-			len = getline(&line, &n, file);
-		}
-		fclose(file);
+		g_cmd_init = value;
 	}
+	else if (sscanf(line,"play=\"%[^\"]", value))
+	{
+		g_cmd_play = value;
+	}
+	else if (sscanf(line,"stop=\"%[^\"]", value))
+	{
+		g_cmd_stop = value;
+	}
+	else if (sscanf(line,"pause=\"%[^\"]", value))
+	{
+		g_cmd_pause = value;
+	}
+	return 0;
 }
 
 static int
 output_system_init(void)
 {
-	output_system_readconf(CONFIGPATH);
+	config_read(MODULE_NAME,output_system_check);
 	if ( g_cmd_init && !fork())
 	{
 		char *cmd = output_system_parse_cmd(g_cmd_init);

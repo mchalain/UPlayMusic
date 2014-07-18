@@ -23,49 +23,16 @@ static int g_cmd_card = 0;
 static int g_cmd_device = 0;
 static struct pcm *g_pcm = NULL;
 
-void
-sound_tinyalsa_readconf(char *filepath)
+int
+sound_tinyalsa_check(char *line, int len)
 {
-	FILE *file;
-
-	file = fopen(filepath,"r");
-	if (!file)
+	if (sscanf(line,"card=%i[^\n]", &g_cmd_card))
 	{
-		LOG_DEBUG("error on %s", filepath);
-		file = fopen("./"CONFIGFILE,"r");
 	}
-	if (file)
+	else if (sscanf(line,"device=%i[^\n]", &g_cmd_device))
 	{
-		char *line = NULL;
-		ssize_t len;
-		size_t n=0;
-		len = getline(&line, &n, file);
-		while (len > 0)
-		{
-			if (!strcmp(line,"[sound_tinyalsa]"))
-			{
-				break;
-			}			
-			free(line);
-			line = NULL;
-			len = getline(&line, &n, file);
-		}
-		while (len > 0)
-		{
-			if (sscanf(line,"card=%i[^\n]", &g_cmd_card))
-			{
-			}
-			else if (sscanf(line,"device=%i[^\n]", &g_cmd_device))
-			{
-			}
-			free(line);
-			line = NULL;
-			len = getline(&line, &n, file);
-		}
-		fclose(file);
 	}
-	else
-		LOG_DEBUG("%s", "./"CONFIGFILE);
+	return 0;
 }
 
 static int

@@ -5,6 +5,8 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+#define CONFIGFILE PACKAGE_NAME".conf"
+#define CONFIGPATH DATADIR "/"CONFIGFILE
 #include "pilot_log.h"
 
 void
