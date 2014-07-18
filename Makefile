@@ -32,4 +32,4 @@ all:
 	make $(build)=src/modules/system.mk
 	make $(build)=src/modules/sound_tinyalsa.mk
 
-	make $(build)=conf.mk
+	make $(build)=data/conf.mk
