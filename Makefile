@@ -2,16 +2,13 @@ OBJTREE:=obj
 export OBJTREE
 srctree=.
 
-bin-y=
-lib-y=
-
 CONFIG=./config
 export CONFIG
 
 #CFLAGS=-g
 CFLAGS+=-g -DDEBUG -DHAVE_CONFIG_H -DPILOT_MODULES -I./include
-export CFLAGS
 STATIC=
+export CFLAGS STATIC
 
 DEFAULT: all
 
