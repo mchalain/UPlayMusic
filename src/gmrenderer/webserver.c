@@ -92,7 +92,7 @@ int webserver_register_file(const char *path, const char *content_type)
 	struct virtual_file *entry;
 	int rc;
 
-	snprintf(local_fname, PATH_MAX, "%s%s", PKG_DATADIR,
+	snprintf(local_fname, PATH_MAX, "%s%s", DATADIR,
 	         strrchr(path, '/'));
 
 	Log_info("webserver", "Provide %s (%s) from %s", path, content_type,
