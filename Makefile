@@ -2,8 +2,11 @@ OBJTREE:=obj
 export OBJTREE
 srctree=.
 
-CONFIG=./config
-export CONFIG
+CC=$(CROSS_COMPILE)gcc
+LD=$(CROSS_COMPILE)gcc
+AR=$(CROSS_COMPILE)ar
+RANLIB=$(CROSS_COMPILE)ranlib
+export CC LD AR RANLIB
 
 #CFLAGS=-g
 CFLAGS+=-g -DDEBUG -DHAVE_CONFIG_H -DPILOT_MODULES -I./include
@@ -11,6 +14,9 @@ STATIC=
 export CFLAGS STATIC
 
 DEFAULT: all
+
+CONFIG=./config
+export CONFIG
 
 include ./scripts.mk
 
