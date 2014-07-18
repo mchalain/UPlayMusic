@@ -34,8 +34,8 @@ include $(CONFIG)
 endif
 ifneq ($(file),)
 include $(file)
-src?=$(SRCTREE:%=%/)$(dir $(file))
-obj?=$(OBJTREE:%=%/)$(dir $(file))
+src=$(SRCTREE:%=%/)$(dir $(file))
+obj=$(OBJTREE:%=%/)$(dir $(file))
 endif
 
 ##
@@ -64,7 +64,7 @@ DLIB_SONAME:=-Wl,$(_DLIB_SONAME)
 else
 DLIB_SONAME:=$(_DLIB_SONAME)
 endif
-RPATH=$(wildcard $(addsuffix /.,$(wildcard $(OBJTREE:%=%/)* $(obj)*)))
+RPATH=$(wildcard $(addsuffix /.,$(wildcard $(OBJTREE:%=%/)* $(obj)/*)))
 quiet_cmd_cc_o_c=CC $*
  cmd_cc_o_c=$(CC) $(CFLAGS) $($*_CFLAGS) -c -o $@ $<
 quiet_cmd_ld_bin=LD $*
@@ -81,7 +81,7 @@ quiet_cmd_ld_dlib=LD $*
 ##
 $(foreach t,$(slib-y) $(lib-y) $(bin-y), $(eval $(t)-objs:=$($(t)_SOURCES:%.c=%.o)))
 $(foreach t,$(slib-y) $(lib-y) $(bin-y), $(eval $(t)-objs:=$($(t)_SOURCES:%.c=%.o)))
-target-objs:=$(foreach t, $(slib-y) $(lib-y) $(bin-y) $(modules-y), $(if $($(t)-objs), $(addprefix $(obj),$($(t)-objs)), $(obj)/$(t).o))
+target-objs:=$(foreach t, $(slib-y) $(lib-y) $(bin-y) $(modules-y), $(if $($(t)-objs), $(addprefix $(obj)/,$($(t)-objs)), $(obj)/$(t).o))
 
 $(foreach t,$(slib-y) $(lib-y) $(bin-y) $(modules-y),$(foreach s, $($(t)_SOURCES),$(eval $(s:%.c=%)_CFLAGS:=$($(t)_CFLAGS))))
 
@@ -91,13 +91,13 @@ $(foreach t,$(slib-y) $(lib-y) $(bin-y) $(modules-y),$(foreach s, $($(t)_SOURCES
 slib-y:=$(addprefix lib,$(slib-y))
 lib-y:=$(addprefix lib,$(lib-y))
 ifdef STATIC
-lib-static-target:=$(addprefix $(obj),$(addsuffix $(slib-ext:%=.%),$(slib-y) $(lib-y)))
+lib-static-target:=$(addprefix $(obj)/,$(addsuffix $(slib-ext:%=.%),$(slib-y) $(lib-y)))
 else
-lib-static-target:=$(addprefix $(obj),$(addsuffix $(slib-ext:%=.%),$(slib-y)))
-lib-dynamic-target:=$(addprefix $(obj),$(addsuffix $(dlib-ext:%=.%),$(lib-y)))
+lib-static-target:=$(addprefix $(obj)/,$(addsuffix $(slib-ext:%=.%),$(slib-y)))
+lib-dynamic-target:=$(addprefix $(obj)/,$(addsuffix $(dlib-ext:%=.%),$(lib-y)))
 endif
-modules-target:=$(addprefix $(obj),$(addsuffix $(dlib-ext:%=.%),$(modules-y)))
-bin-target:=$(addprefix $(obj),$(addsuffix $(bin-ext:%=.%),$(bin-y)))
+modules-target:=$(addprefix $(obj)/,$(addsuffix $(dlib-ext:%=.%),$(modules-y)))
+bin-target:=$(addprefix $(obj)/,$(addsuffix $(bin-ext:%=.%),$(bin-y)))
 
 targets:=$(lib-static-target)
 targets+=$(modules-target)
@@ -110,25 +110,25 @@ targets+=$(bin-target)
 CFLAGS+=-I./$(src) -I.
 LDFLAGS+=-L./$(obj)
 
-$(obj)%.o:$(src)%.c
+$(obj)/%.o:$(src)/%.c
 	@$(call cmd,cc_o_c)
 
-$(obj):
+$(obj)/:
 	$(Q)mkdir -p $@
 
 .SECONDEXPANSION:
-$(lib-static-target): $(obj)lib%$(slib-ext:%=.%): $$(if $$(%-objs), $$(addprefix $(obj),$$(%-objs)), $(obj)%.o)
+$(lib-static-target): $(obj)/lib%$(slib-ext:%=.%): $$(if $$(%-objs), $$(addprefix $(obj)/,$$(%-objs)), $(obj)/%.o)
 	@$(call cmd,ld_slib)
 
 $(lib-dynamic-target): CFLAGS+=-fPIC
-$(lib-dynamic-target): $(obj)lib%$(dlib-ext:%=.%): $$(if $$(%-objs), $$(addprefix $(obj),$$(%-objs)), $(obj)%.o)
+$(lib-dynamic-target): $(obj)/lib%$(dlib-ext:%=.%): $$(if $$(%-objs), $$(addprefix $(obj)/,$$(%-objs)), $(obj)/%.o)
 	@$(call cmd,ld_dlib)
 
 $(modules-target): CFLAGS+=-fPIC
-$(modules-target): $(obj)%$(dlib-ext:%=.%): $$(if $$(%-objs), $$(addprefix $(obj),$$(%-objs)), $(obj)%.o)
+$(modules-target): $(obj)/%$(dlib-ext:%=.%): $$(if $$(%-objs), $$(addprefix $(obj)/,$$(%-objs)), $(obj)/%.o)
 	@$(call cmd,ld_dlib)
 
-$(bin-target): $(obj)%$(bin-ext:%=.%): $$(if $$(%-objs), $$(addprefix $(obj),$$(%-objs)), $(obj)%.o)
+$(bin-target): $(obj)/%$(bin-ext:%=.%): $$(if $$(%-objs), $$(addprefix $(obj)/,$$(%-objs)), $(obj)/%.o)
 	@$(call cmd,ld_bin)
 
 ##
@@ -156,11 +156,11 @@ bin-install:=$(addprefix $(BINDIR)/,$(addsuffix $(bin-ext:%=.%),$(bin-y)))
 ##
 $(data-install): $(DATADIR)/%: $(src)/%
 	@$(call cmd,install_data)
-$(lib-dynamic-install): $(LIBDIR)/lib%$(dlib-ext:%=.%): $(obj)lib%$(dlib-ext:%=.%)
+$(lib-dynamic-install): $(LIBDIR)/lib%$(dlib-ext:%=.%): $(obj)/lib%$(dlib-ext:%=.%)
 	@$(call cmd,install_dlib)
-$(modules-install): $(PKGLIBDIR)/%$(dlib-ext:%=.%): $(obj)%$(dlib-ext:%=.%)
+$(modules-install): $(PKGLIBDIR)/%$(dlib-ext:%=.%): $(obj)/%$(dlib-ext:%=.%)
 	@$(call cmd,install_modules)
-$(bin-install): $(BINDIR)/%$(bin-ext:%=.%): $(obj)%$(bin-ext:%=.%)
+$(bin-install): $(BINDIR)/%$(bin-ext:%=.%): $(obj)/%$(bin-ext:%=.%)
 	@$(call cmd,install_bin)
 
 install:=$(bin-install)
@@ -183,7 +183,7 @@ quiet_cmd_config=CONFIG $*
 ##
 build=$(if $(action),$(action),_build) -f scripts.mk file
 
-_build: config.h $(obj) $(targets)
+_build: config.h $(obj)/ $(targets)
 	@:
 
 _install: $(install)
