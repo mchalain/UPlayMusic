@@ -4,8 +4,10 @@
 V=0
 ifeq ($(V),1)
 quiet=
+Q=
 else
 quiet=quiet_
+Q=@
 endif
 echo-cmd = $(if $($(quiet)cmd_$(1)), echo '  $($(quiet)cmd_$(1))';)
 cmd = $(echo-cmd) $(cmd_$(1))
@@ -64,15 +66,15 @@ DLIB_SONAME:=$(_DLIB_SONAME)
 endif
 RPATH=$(wildcard $(addsuffix /.,$(wildcard $(OBJTREE:%=%/)* $(obj)*)))
 quiet_cmd_cc_o_c=CC $*
- cmd_cc_o_c=$(Q)$(CC) $(CFLAGS) $($*_CFLAGS) -c -o $@ $<
+ cmd_cc_o_c=$(CC) $(CFLAGS) $($*_CFLAGS) -c -o $@ $<
 quiet_cmd_ld_bin=LD $*
- cmd_ld_bin=$(Q)$(LD) $(LDFLAGS) $($*_LDFLAGS) -o $@ $^ $(addprefix -L,$(RPATH)) $(LIBRARY:%=-l%) $($*_LIBRARY:%=-l%)
+ cmd_ld_bin=$(LD) $(LDFLAGS) $($*_LDFLAGS) -o $@ $^ $(addprefix -L,$(RPATH)) $(LIBRARY:%=-l%) $($*_LIBRARY:%=-l%)
 quiet_cmd_ld_slib=LD $*
  cmd_ld_slib=$(RM) $@ && \
 	$(AR) -cvq $@ $^ > /dev/null && \
 	$(RANLIB) $@
 quiet_cmd_ld_dlib=LD $*
- cmd_ld_dlib=$(Q)$(LD) $(LDFLAGS) $($*_LDFLAGS) -shared $(DLIB_SONAME),$@ -o $@ $^ $(addprefix -L,$(RPATH)) $(LIBRARY:%=-l%) $($*_LIBRARY:%=-l%)
+ cmd_ld_dlib=$(LD) $(LDFLAGS) $($*_LDFLAGS) -shared $(DLIB_SONAME),$@ -o $@ $^ $(addprefix -L,$(RPATH)) $(LIBRARY:%=-l%) $($*_LIBRARY:%=-l%)
 
 ##
 # objects recipes generation
@@ -112,7 +114,7 @@ $(obj)%.o:$(src)%.c
 	@$(call cmd,cc_o_c)
 
 $(obj):
-	mkdir -p $@
+	$(Q)mkdir -p $@
 
 .SECONDEXPANSION:
 $(lib-static-target): $(obj)lib%$(slib-ext:%=.%): $$(if $$(%-objs), $$(addprefix $(obj),$$(%-objs)), $(obj)%.o)
@@ -133,13 +135,13 @@ $(bin-target): $(obj)%$(bin-ext:%=.%): $$(if $$(%-objs), $$(addprefix $(obj),$$(
 # Commands for install
 ##
 quiet_cmd_install_data=INSTALL $*
- cmd_install_data=$(Q)$(INSTALL) -D $< $(DESTDIR:%=%/)$@
+ cmd_install_data=$(INSTALL) -D $< $(DESTDIR:%=%/)$@
 quiet_cmd_install_modules=INSTALL $*
- cmd_install_modules=$(Q)$(INSTALL) -D $< $(DESTDIR:%=%/)$@
+ cmd_install_modules=$(INSTALL) -D $< $(DESTDIR:%=%/)$@
 quiet_cmd_install_dlib=INSTALL $*
- cmd_install_dlib=$(Q)$(INSTALL) -D $< $(DESTDIR:%=%/)$@
+ cmd_install_dlib=$(INSTALL) -D $< $(DESTDIR:%=%/)$@
 quiet_cmd_install_bin=INSTALL $*
- cmd_install_bin=$(Q)$(INSTALL) -D $< $(DESTDIR:%=%/)$@
+ cmd_install_bin=$(INSTALL) -D $< $(DESTDIR:%=%/)$@
 
 ##
 # install recipes generation
@@ -174,7 +176,7 @@ space=$(empty) $(empty)
 quote="
 sharp=\#
 quiet_cmd_config=CONFIG $*
- cmd_config=$(Q)$(AWK) -F= '$$1 != $(quote)$(quote) {print $(quote)$(sharp)define$(space)$(quote)$$1$(quote)$(space)$(quote)$$2}' $< > $@
+ cmd_config=$(AWK) -F= '$$1 != $(quote)$(quote) {print $(quote)$(sharp)define$(space)$(quote)$$1$(quote)$(space)$(quote)$$2}' $< > $@
 
 ##
 # main entries
@@ -188,10 +190,10 @@ _install: $(install)
 	@:
 
 _clean:
-	rm -rf $(target-objs)
+	$(Q)rm -rf $(target-objs)
 
 _distclean: _clean
-	rm -rf $(targets)
+	$(Q)rm -rf $(targets)
 
 clean: action:=_clean
 clean: all
