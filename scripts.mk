@@ -27,13 +27,16 @@ slib-y:=
 modules-y:=
 data-y:=
 
+SRCTREE?=$(dir $(realpath $(firstword $(MAKEFILE_LIST))))
+OBJTREE?=$(CURDIR)
+export SRCTREE OBJTREE
 ifneq ($(CONFIG),)
-include $(CONFIG)
+include $(SRCTREE:%=%/)$(CONFIG)
 	# CONFIG could define LD CC or/and CFLAGS
 	# CONFIG must be included before "Commands for build and link"
 endif
 ifneq ($(file),)
-include $(SRCTREE)/$(file)
+include $(SRCTREE:%=%/)$(file)
 src=$(SRCTREE:%=%/)$(dir $(file))
 obj=$(OBJTREE:%=%/)$(dir $(file))
 endif
@@ -67,7 +70,7 @@ DIRECTORIES_LIST+=$(if $(PKGLIBDIR),,PKGLIBDIR)
 PKGLIBDIR?=$(PREFIX:"%"=%)/lib/$(PACKAGE_NAME:"%"=%)
 
 CFLAGS+=$(foreach macro,$(DIRECTORIES_LIST),-D$(macro)=\"$($(macro))\")
-CFLAGS+=-I./$(src) -I.
+CFLAGS+=-I./$(src) -I./$(OBJTREE) -I.
 LDFLAGS+=-L./$(obj) -Wl,-rpath,$(LIBDIR:"%"=%)
 endif
 
@@ -196,7 +199,7 @@ quiet_cmd_config=CONFIG $*
 ##
 build=$(if $(action),$(action),_build) -f $(SRCTREE)/scripts.mk file
 
-_build: config.h $(obj)/ $(targets)
+_build: $(obj)/ $(OBJTREE:%=%/)config.h $(targets)
 	@:
 
 _install: $(install)
@@ -206,17 +209,19 @@ _clean:
 	$(Q)rm -rf $(target-objs)
 
 _distclean: _clean
-	$(Q)rm -rf $(targets)
+	$(Q)rm -f $(targets)
 
 clean: action:=_clean
 clean: all
 
 distclean: action:=_distclean
 distclean: all
+distclean:
+	$(Q)rm -f $(OBJTREE:%=%/)config.h
 
 install: action:=_install
 install: all
 
-config.h: $(SRCTREE)/config
+$(OBJTREE:%=%/)config.h: $(SRCTREE:%=%/)$(CONFIG)
 	@$(call cmd,config)
-	
+
