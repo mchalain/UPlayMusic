@@ -33,7 +33,7 @@ include $(CONFIG)
 	# CONFIG must be included before "Commands for build and link"
 endif
 ifneq ($(file),)
-include $(file)
+include $(SRCTREE)/$(file)
 src=$(SRCTREE:%=%/)$(dir $(file))
 obj=$(OBJTREE:%=%/)$(dir $(file))
 endif
@@ -181,7 +181,7 @@ quiet_cmd_config=CONFIG $*
 ##
 # main entries
 ##
-build=$(if $(action),$(action),_build) -f scripts.mk file
+build=$(if $(action),$(action),_build) -f $(SRCTREE)/scripts.mk file
 
 _build: config.h $(obj)/ $(targets)
 	@:
@@ -204,6 +204,6 @@ distclean: all
 install: action:=_install
 install: all
 
-config.h: config
+config.h: $(SRCTREE)/config
 	@$(call cmd,config)
 	

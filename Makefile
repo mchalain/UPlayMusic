@@ -1,6 +1,7 @@
-OBJTREE:=obj
+OBJTREE:=$(CURDIR)
 export OBJTREE
-srctree=.
+SRCTREE=$(dir $(realpath $(lastword $(MAKEFILE_LIST))))
+export SRCTREE
 
 CC=$(CROSS_COMPILE)gcc
 LD=$(CROSS_COMPILE)gcc
@@ -9,16 +10,16 @@ RANLIB=$(CROSS_COMPILE)ranlib
 export CC LD AR RANLIB
 
 #CFLAGS=-g
-CFLAGS+=-g -DDEBUG -DHAVE_CONFIG_H -DPILOT_MODULES -I./include
+CFLAGS+=-g -DDEBUG -DHAVE_CONFIG_H -DPILOT_MODULES -I$(SRCTREE)/include
 STATIC=
 export CFLAGS STATIC
 
 DEFAULT: all
 
-CONFIG=./config
+CONFIG=$(SRCTREE)/config
 export CONFIG
 
-include ./scripts.mk
+include $(SRCTREE)/scripts.mk
 
 all:
 	make $(build)=src/gmrenderer/mupnp.mk
