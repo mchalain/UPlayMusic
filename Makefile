@@ -33,3 +33,7 @@ all:
 	make $(build)=src/modules/sound_tinyalsa.mk
 
 	make $(build)=data/conf.mk
+
+distclean:
+	$(Q)rm -rf obj
+	$(Q)rm -f config.h
