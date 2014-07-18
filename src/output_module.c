@@ -38,7 +38,6 @@ struct output_module *output_module_get(const char *shortname)
 	struct pilot_mods *mod;
 
 	ret = pilot_mods_load(PKGLIBDIR, 0, PACKAGE_APPID, OUTPUT, 1);
-	ret = pilot_mods_load("./obj", 0, PACKAGE_APPID, OUTPUT, 1);
 
 	if (!ret)
 	{

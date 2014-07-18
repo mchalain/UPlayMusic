@@ -41,7 +41,6 @@ sound_module_set(const char *shortname)
 	struct pilot_mods *mod;
 
 	ret = pilot_mods_load(PKGLIBDIR, 0, PACKAGE_APPID, SOUND, 1);
-	ret = pilot_mods_load("./obj", 0, PACKAGE_APPID, SOUND, 1);
 
 	if (!ret && shortname != NULL)
 	{
