@@ -280,8 +280,8 @@ char webserver_register_callbacks(void) {
 // Assuming that they will go on with this broken idea and eventually remove
 // the support for the VirtualDirCallbacks in new major versions, we use the
 // newer (may I emphasize: questionable) API to register the callbacks.
-gboolean webserver_register_callbacks(void) {
-  gboolean result =
+char webserver_register_callbacks(void) {
+  char result =
     (UpnpVirtualDir_set_GetInfoCallback(webserver_get_info) == UPNP_E_SUCCESS
      && UpnpVirtualDir_set_OpenCallback(webserver_open) == UPNP_E_SUCCESS
      && UpnpVirtualDir_set_ReadCallback(webserver_read) == UPNP_E_SUCCESS
