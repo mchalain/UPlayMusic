@@ -58,5 +58,5 @@ config_read(char *section, int (*check)(char*, int))
 		fclose(file);
 	}
 	else
-		LOG_DEBUG("%s", "./"CONFIGFILE);
+		LOG_DEBUG("%s not found", "./"CONFIGFILE);
 }
