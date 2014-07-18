@@ -41,19 +41,35 @@ endif
 ##
 # default Macros for installation
 ##
+# not set variable if not into the build step
+AWK?=awk
+INSTALL?=install
+ifneq ($(file),)
 CC?=$(CROSS_COMPILE)gcc
 LD?=$(CROSS_COMPILE)gcc
 AR?=$(CROSS_COMPILE)ar
 RANLIB?=$(CROSS_COMPILE)ranlib
-AWK?=awk
-INSTALL?=install
+DIRECTORIES_LIST:=
+#PREFIX not set into CONFIG
+DIRECTORIES_LIST+=$(if $(PREFIX),,PREFIX)
 PREFIX?=/usr/local
-LIBDIR?=$(PREFIX)/lib
-BINDIR?=$(PREFIX)/bin
-DATADIR=$(PREFIX)/share/$(PACKAGE_NAME:"%"=%)
-PKGLIBDIR?=$(PREFIX)/lib/$(PACKAGE_NAME:"%"=%)
+#LIBDIR not set into CONFIG
+DIRECTORIES_LIST+=$(if $(LIBDIR),,LIBDIR)
+LIBDIR?=$(PREFIX:"%"=%)/lib
+#BINDIR not set into CONFIG
+DIRECTORIES_LIST+=$(if $(BINDIR),,BINDIR)
+BINDIR?=$(PREFIX:"%"=%)/bin
+#DATADIR not set into CONFIG
+DIRECTORIES_LIST+=$(if $(DATADIR),,DATADIR)
+DATADIR=$(PREFIX:"%"=%)/share/$(PACKAGE_NAME:"%"=%)
+#PKGLIBDIR not set into CONFIG
+DIRECTORIES_LIST+=$(if $(PKGLIBDIR),,PKGLIBDIR)
+PKGLIBDIR?=$(PREFIX:"%"=%)/lib/$(PACKAGE_NAME:"%"=%)
 
-CFLAGS+=$(foreach macro,PREFIX LIBDIR BINDIR DATADIR PKGLIBDIR,-D$(macro)=\"$($(macro))\")
+CFLAGS+=$(foreach macro,$(DIRECTORIES_LIST),-D$(macro)=\"$($(macro))\")
+CFLAGS+=-I./$(src) -I.
+LDFLAGS+=-L./$(obj) -Wl,-rpath,$(LIBDIR:"%"=%)
+endif
 
 ##
 # Commands for build and link
@@ -107,9 +123,6 @@ targets+=$(bin-target)
 ##
 # build rules
 ##
-CFLAGS+=-I./$(src) -I.
-LDFLAGS+=-L./$(obj)
-
 $(obj)/%.o:$(src)/%.c
 	@$(call cmd,cc_o_c)
 
