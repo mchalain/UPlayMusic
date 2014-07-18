@@ -22,18 +22,18 @@ export CONFIG
 include $(SRCTREE)/scripts.mk
 
 all:
-	make $(build)=src/gmrenderer/mupnp.mk
-	make $(build)=src/pilot_atk/pilot_atk.mk
-	make $(build)=src/pilot_mods/pilot_mods.mk
-	make $(build)=src/application.mk
+	$(Q)make $(build)=src/gmrenderer/mupnp.mk
+	$(Q)make $(build)=src/pilot_atk/pilot_atk.mk
+	$(Q)make $(build)=src/pilot_mods/pilot_mods.mk
+	$(Q)make $(build)=src/application.mk
 
-	make $(build)=src/modules/debug.mk
-	make $(build)=src/modules/gstreamer.mk
-	make $(build)=src/modules/mpg123.mk
-	make $(build)=src/modules/system.mk
-	make $(build)=src/modules/sound_tinyalsa.mk
+	$(Q)make $(build)=src/modules/debug.mk
+	$(Q)make $(build)=src/modules/gstreamer.mk
+	$(Q)make $(build)=src/modules/mpg123.mk
+	$(Q)make $(build)=src/modules/system.mk
+	$(Q)make $(build)=src/modules/sound_tinyalsa.mk
 
-	make $(build)=data/conf.mk
+	$(Q)make $(build)=data/conf.mk
 
 distclean:
 	$(Q)rm -rf obj
