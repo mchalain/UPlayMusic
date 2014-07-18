@@ -1,7 +1,4 @@
-OBJTREE:=$(CURDIR)
-export OBJTREE
 SRCTREE=$(dir $(realpath $(lastword $(MAKEFILE_LIST))))
-export SRCTREE
 
 CC=$(CROSS_COMPILE)gcc
 LD=$(CROSS_COMPILE)gcc
@@ -10,16 +7,16 @@ RANLIB=$(CROSS_COMPILE)ranlib
 export CC LD AR RANLIB
 
 #CFLAGS=-g
-CFLAGS+=-g -DDEBUG -DHAVE_CONFIG_H -DPILOT_MODULES -I$(SRCTREE)/include
+CFLAGS+=-g -DDEBUG -DHAVE_CONFIG_H -DPILOT_MODULES -I$(SRCTREE:%=%/)include
 STATIC=
 export CFLAGS STATIC
 
 DEFAULT: all
 
-CONFIG=$(SRCTREE)/config
+CONFIG=config
 export CONFIG
 
-include $(SRCTREE)/scripts.mk
+include $(SRCTREE:%=%/)scripts.mk
 
 all:
 	$(Q)make $(build)=src/gmrenderer/mupnp.mk
@@ -34,7 +31,3 @@ all:
 	$(Q)make $(build)=src/modules/sound_tinyalsa.mk
 
 	$(Q)make $(build)=data/conf.mk
-
-distclean:
-	$(Q)rm -rf obj
-	$(Q)rm -f config.h
