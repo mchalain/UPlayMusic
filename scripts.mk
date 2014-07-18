@@ -1,3 +1,6 @@
+##
+# debug tools
+##
 V=0
 ifeq ($(V),1)
 quiet=
@@ -16,6 +19,12 @@ dlib-ext=so
 ##
 # make file with targets definition
 ##
+bin-y:=
+lib-y:=
+slib-y:=
+modules-y:=
+data-y:=
+
 ifneq ($(CONFIG),)
 include $(CONFIG)
 	# CONFIG could define LD CC or/and CFLAGS
@@ -26,6 +35,23 @@ include $(file)
 src?=$(SRCTREE:%=%/)$(dir $(file))
 obj?=$(OBJTREE:%=%/)$(dir $(file))
 endif
+
+##
+# default Macros for installation
+##
+CC?=$(CROSS_COMPILE)gcc
+LD?=$(CROSS_COMPILE)gcc
+AR?=$(CROSS_COMPILE)ar
+RANLIB?=$(CROSS_COMPILE)ranlib
+AWK?=awk
+INSTALL?=install
+PREFIX?=/usr/local
+LIBDIR?=$(PREFIX)/lib
+BINDIR?=$(PREFIX)/bin
+DATADIR=$(PREFIX)/share/$(PACKAGE_NAME:"%"=%)
+PKGLIBDIR?=$(PREFIX)/lib/$(PACKAGE_NAME:"%"=%)
+
+CFLAGS+=$(foreach macro,PREFIX LIBDIR BINDIR DATADIR PKGLIBDIR,-D$(macro)=\"$($(macro))\")
 
 ##
 # Commands for build and link
@@ -68,7 +94,7 @@ else
 lib-static-target:=$(addprefix $(obj),$(addsuffix $(slib-ext:%=.%),$(slib-y)))
 lib-dynamic-target:=$(addprefix $(obj),$(addsuffix $(dlib-ext:%=.%),$(lib-y)))
 endif
-modules-target:=$(addprefix $(PKGLIBDIR),$(addsuffix $(dlib-ext:%=.%),$(modules-y)))
+modules-target:=$(addprefix $(obj),$(addsuffix $(dlib-ext:%=.%),$(modules-y)))
 bin-target:=$(addprefix $(obj),$(addsuffix $(bin-ext:%=.%),$(bin-y)))
 
 targets:=$(lib-static-target)
@@ -106,13 +132,6 @@ $(bin-target): $(obj)%$(bin-ext:%=.%): $$(if $$(%-objs), $$(addprefix $(obj),$$(
 ##
 # Commands for install
 ##
-INSTALL?=install
-PREFIX?=/usr/local
-LIBDIR?=$(PREFIX)/lib
-BINDIR?=$(PREFIX)/bin
-DATADIR=$(PREFIX)/share/$(PACKAGE_NAME)
-PKGLIBDIR?=$(PREFIX)/lib/$(PACKAGE_NAME)
-
 quiet_cmd_install_data=INSTALL $*
  cmd_install_data=$(Q)$(INSTALL) -D $< $(DESTDIR:%=%/)$@
 quiet_cmd_install_modules=INSTALL $*
@@ -148,6 +167,16 @@ install+=$(modules-install)
 install+=$(data-install)
 
 ##
+# commands for configuration
+##
+empty=
+space=$(empty) $(empty)
+quote="
+sharp=\#
+quiet_cmd_config=CONFIG $*
+ cmd_config=$(Q)$(AWK) -F= '$$1 != $(quote)$(quote) {print $(quote)$(sharp)define$(space)$(quote)$$1$(quote)$(space)$(quote)$$2}' $< > $@
+
+##
 # main entries
 ##
 build=$(if $(action),$(action),_build) -f scripts.mk file
@@ -172,3 +201,7 @@ distclean: all
 
 install: action:=_install
 install: all
+
+config.h: config
+	@$(call cmd,config)
+	
