@@ -55,7 +55,7 @@ upme_check(char *line, int len)
 	return ret;
 }
 
-int pilot_main(int argc, const char **argv)
+int main(int argc, const char **argv)
 {
 	int ret;
 	/**
