@@ -55,22 +55,56 @@ CC?=$(CROSS_COMPILE)gcc
 LD?=$(CROSS_COMPILE)gcc
 AR?=$(CROSS_COMPILE)ar
 RANLIB?=$(CROSS_COMPILE)ranlib
+
 DIRECTORIES_LIST:=
-#PREFIX not set into CONFIG
-DIRECTORIES_LIST+=$(if $(PREFIX),,PREFIX)
-PREFIX?=/usr/local
-#LIBDIR not set into CONFIG
-DIRECTORIES_LIST+=$(if $(LIBDIR),,LIBDIR)
-LIBDIR?=$(PREFIX:"%"=%)/lib
-#BINDIR not set into CONFIG
-DIRECTORIES_LIST+=$(if $(BINDIR),,BINDIR)
-BINDIR?=$(PREFIX:"%"=%)/bin
-#DATADIR not set into CONFIG
-DIRECTORIES_LIST+=$(if $(DATADIR),,DATADIR)
-DATADIR=$(PREFIX:"%"=%)/share/$(PACKAGE_NAME:"%"=%)
+#PREFIX set into CONFIG
+ifneq ($(PREFIX),)
+prefix:=$(PREFIX:"%"=%)
+else
+prefix?=/usr/local
+PREFIX:=$(prefix:%="%")
+endif
+DIRECTORIES_LIST+=PREFIX
+#LIBDIR set into CONFIG
+ifneq ($(LIBDIR),)
+libdir:=$(LIBDIR)
+else
+libdir?=$(prefix)/lib
+LIBDIR:=$(libdir:%="%")
+endif
+DIRECTORIES_LIST+=LIBDIR
+#BINDIR set into CONFIG
+ifneq ($(BINDIR),)
+bindir:=$(BINDIR)
+else
+bindir?=$(prefix)/bin
+BINDIR:=$(bindir:%="%")
+endif
+DIRECTORIES_LIST+=BINDIR
+#SBINDIR set into CONFIG
+ifneq ($(SBINDIR),)
+sbindir:=$(SBINDIR)
+else
+sbindir?=$(prefix)/sbin
+SBINDIR:=$(sbindir:%="%")
+endif
+DIRECTORIES_LIST+=SBINDIR
+#DATADIR set into CONFIG
+ifneq ($(DATADIR),)
+datadir:=$(DATADIR)
+else
+datadir?=$(prefix)/share/$(PACKAGE_NAME:"%"=%)
+DATADIR:=$(datadir:%="%")
+endif
+DIRECTORIES_LIST+=DATADIR
 #PKGLIBDIR not set into CONFIG
-DIRECTORIES_LIST+=$(if $(PKGLIBDIR),,PKGLIBDIR)
-PKGLIBDIR?=$(PREFIX:"%"=%)/lib/$(PACKAGE_NAME:"%"=%)
+ifneq ($(PKGLIBDIR),)
+pkglibdir:=$(PKGLIBDIR)
+else
+pkglibdir?=$(libdir)/$(PACKAGE_NAME:"%"=%)
+PKGLIBDIR:=$(pkglibdir:%="%")
+endif
+DIRECTORIES_LIST+=PKGLIBDIR
 
 CFLAGS+=$(foreach macro,$(DIRECTORIES_LIST),-D$(macro)=\"$($(macro))\")
 CFLAGS+=-I./$(src) -I./$(OBJTREE) -I.
@@ -172,21 +206,21 @@ quiet_cmd_install_bin=INSTALL $*
 ##
 # install recipes generation
 ##
-data-install:=$(addprefix $(DATADIR)/,$(data-y))
-lib-dynamic-install:=$(addprefix $(LIBDIR)/,$(addsuffix $(dlib-ext:%=.%),$(lib-y)))
-modules-install:=$(addprefix $(PKGLIBDIR)/,$(addsuffix $(dlib-ext:%=.%),$(modules-y)))
-bin-install:=$(addprefix $(BINDIR)/,$(addsuffix $(bin-ext:%=.%),$(bin-y)))
+data-install:=$(addprefix $(datadir)/,$(data-y))
+lib-dynamic-install:=$(addprefix $(libdir)/,$(addsuffix $(dlib-ext:%=.%),$(lib-y)))
+modules-install:=$(addprefix $(pkglibdir)/,$(addsuffix $(dlib-ext:%=.%),$(modules-y)))
+bin-install:=$(addprefix $(bindir)/,$(addsuffix $(bin-ext:%=.%),$(bin-y)))
 
 ##
 # install rules
 ##
-$(data-install): $(DATADIR)/%: $(src)/%
+$(data-install): $(datadir)/%: $(src)/%
 	@$(call cmd,install_data)
-$(lib-dynamic-install): $(LIBDIR)/lib%$(dlib-ext:%=.%): $(obj)/lib%$(dlib-ext:%=.%)
+$(lib-dynamic-install): $(libdir)/lib%$(dlib-ext:%=.%): $(obj)/lib%$(dlib-ext:%=.%)
 	@$(call cmd,install_dlib)
-$(modules-install): $(PKGLIBDIR)/%$(dlib-ext:%=.%): $(obj)/%$(dlib-ext:%=.%)
+$(modules-install): $(pkglibdir)/%$(dlib-ext:%=.%): $(obj)/%$(dlib-ext:%=.%)
 	@$(call cmd,install_modules)
-$(bin-install): $(BINDIR)/%$(bin-ext:%=.%): $(obj)/%$(bin-ext:%=.%)
+$(bin-install): $(bindir)/%$(bin-ext:%=.%): $(obj)/%$(bin-ext:%=.%)
 	@$(call cmd,install_bin)
 
 install:=$(bin-install)
@@ -212,7 +246,9 @@ build:=$(action) -f $(SRCTREE)/scripts.mk file
 _build: $(obj)/ $(OBJTREE:%=%/)config.h $(subdir-target) $(targets)
 	@:
 
-_install: $(install)
+_install: action:=_install
+_install: build:=$(action) -f $(SRCTREE)/scripts.mk file
+_install: $(install) $(subdir-target)
 	@:
 
 _clean: action:=_clean
