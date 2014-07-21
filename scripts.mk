@@ -29,17 +29,17 @@ modules-y:=
 data-y:=
 
 SRCTREE?=$(dir $(realpath $(firstword $(MAKEFILE_LIST))))
-OBJTREE?=$(CURDIR)
+OBJTREE?=$(CURDIR)/
 export SRCTREE OBJTREE
 ifneq ($(CONFIG),)
-include $(SRCTREE:%=%/)$(CONFIG)
+include $(SRCTREE:%/=%)/$(CONFIG)
 	# CONFIG could define LD CC or/and CFLAGS
 	# CONFIG must be included before "Commands for build and link"
 endif
 ifneq ($(file),)
-include $(SRCTREE:%=%/)$(file)
-src=$(SRCTREE:%=%/)$(dir $(file))
-obj=$(OBJTREE:%=%/)$(dir $(file))
+include $(SRCTREE:%/=%)/$(file)
+src=$(patsubst %/,%,$(SRCTREE:%/=%)/$(dir $(file)))
+obj=$(patsubst %/,%,$(OBJTREE:%/=%)/$(dir $(file)))
 endif
 
 ##
@@ -153,7 +153,7 @@ $(bin-target): $(obj)/%$(bin-ext:%=.%): $$(if $$(%-objs), $$(addprefix $(obj)/,$
 	@$(call cmd,ld_bin)
 
 .PHONY:$(subdir-target)
-$(subdir-target): $(SRCTREE:%=%/)%:
+$(subdir-target): $(SRCTREE:%/=%)/%:
 	$(Q)make $(build)=$*
 ##
 # Commands for install
