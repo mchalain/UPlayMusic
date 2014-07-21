@@ -154,7 +154,7 @@ $(bin-target): $(obj)/%$(bin-ext:%=.%): $$(if $$(%-objs), $$(addprefix $(obj)/,$
 
 .PHONY:$(subdir-target)
 $(subdir-target): $(SRCTREE:%/=%)/%:
-	$(Q)make $(build)=$*
+	$(Q)$(MAKE) $(build)=$*
 ##
 # Commands for install
 ##
