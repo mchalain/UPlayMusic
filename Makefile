@@ -19,15 +19,7 @@ export CONFIG
 include $(SRCTREE:%=%/)scripts.mk
 
 all:
-	$(Q)make $(build)=src/gmrenderer/mupnp.mk
-	$(Q)make $(build)=src/pilot_atk/pilot_atk.mk
-	$(Q)make $(build)=src/pilot_mods/pilot_mods.mk
 	$(Q)make $(build)=src/application.mk
-
-	$(Q)make $(build)=src/modules/debug.mk
-	$(Q)make $(build)=src/modules/gstreamer.mk
-	$(Q)make $(build)=src/modules/mpg123.mk
-	$(Q)make $(build)=src/modules/system.mk
-	$(Q)make $(build)=src/modules/sound_tinyalsa.mk
+	$(Q)make $(build)=src/modules.mk
 
 	$(Q)make $(build)=data/conf.mk

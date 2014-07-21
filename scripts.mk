@@ -17,6 +17,7 @@ cmd = $(echo-cmd) $(cmd_$(1))
 bin-ext=
 slib-ext=a
 dlib-ext=so
+makefile-ext=mk
 
 ##
 # make file with targets definition
@@ -117,8 +118,13 @@ lib-dynamic-target:=$(addprefix $(obj)/,$(addsuffix $(dlib-ext:%=.%),$(lib-y)))
 endif
 modules-target:=$(addprefix $(obj)/,$(addsuffix $(dlib-ext:%=.%),$(modules-y)))
 bin-target:=$(addprefix $(obj)/,$(addsuffix $(bin-ext:%=.%),$(bin-y)))
+subdir-target:=$(wildcard $(addprefix $(src)/,$(addsuffix /Makefile,$(subdir-y))))
+subdir-target+=$(wildcard $(addprefix $(src)/,$(addsuffix /*$(makefile-ext:%=.%),$(subdir-y))))
+subdir-target+=$(if $(strip $(subdir-target)),,$(wildcard $(addprefix $(src)/,$(subdir-y))))
 
-targets:=$(lib-static-target)
+targets:=
+targets+=$(subdir-target)
+targets+=$(lib-static-target)
 targets+=$(modules-target)
 targets+=$(lib-dynamic-target)
 targets+=$(bin-target)
@@ -147,6 +153,9 @@ $(modules-target): $(obj)/%$(dlib-ext:%=.%): $$(if $$(%-objs), $$(addprefix $(ob
 $(bin-target): $(obj)/%$(bin-ext:%=.%): $$(if $$(%-objs), $$(addprefix $(obj)/,$$(%-objs)), $(obj)/%.o)
 	@$(call cmd,ld_bin)
 
+.PHONY:$(subdir-target)
+$(subdir-target): $(SRCTREE:%=%/)%:
+	$(Q)make $(build)=$*
 ##
 # Commands for install
 ##
@@ -197,7 +206,7 @@ quiet_cmd_config=CONFIG $*
 ##
 # main entries
 ##
-build=$(if $(action),$(action),_build) -f $(SRCTREE)/scripts.mk file
+build:=$(if $(action),$(action),_build) -f $(SRCTREE)/scripts.mk file
 
 _build: $(obj)/ $(OBJTREE:%=%/)config.h $(targets)
 	@:
