@@ -66,30 +66,6 @@ prefix?=/usr/local
 PREFIX:=$(prefix:%="%")
 endif
 DIRECTORIES_LIST+=PREFIX
-#LIBDIR set into CONFIG
-ifneq ($(LIBDIR),)
-libdir:=$(LIBDIR)
-else
-libdir?=$(prefix)/lib
-LIBDIR:=$(libdir:%="%")
-endif
-DIRECTORIES_LIST+=LIBDIR
-#BINDIR set into CONFIG
-ifneq ($(BINDIR),)
-bindir:=$(BINDIR)
-else
-bindir?=$(prefix)/bin
-BINDIR:=$(bindir:%="%")
-endif
-DIRECTORIES_LIST+=BINDIR
-#SBINDIR set into CONFIG
-ifneq ($(SBINDIR),)
-sbindir:=$(SBINDIR)
-else
-sbindir?=$(prefix)/sbin
-SBINDIR:=$(sbindir:%="%")
-endif
-DIRECTORIES_LIST+=SBINDIR
 #DATADIR set into CONFIG
 ifneq ($(DATADIR),)
 datadir:=$(DATADIR)
@@ -106,6 +82,11 @@ pkglibdir?=$(libdir)/$(PACKAGE_NAME:"%"=%)
 PKGLIBDIR:=$(pkglibdir:%="%")
 endif
 DIRECTORIES_LIST+=PKGLIBDIR
+
+bindir?=$(prefix)/bin
+sbindir?=$(prefix)/sbin
+libdir?=$(prefix)/lib
+includedir?=$(prefix)/include
 
 CFLAGS+=$(foreach macro,$(DIRECTORIES_LIST),-D$(macro)=\"$($(macro))\")
 CFLAGS+=-I./$(src) -I./$(OBJTREE) -I.
@@ -203,6 +184,7 @@ quiet_cmd_install_bin=INSTALL $*
 # install recipes generation
 ##
 data-install:=$(addprefix $(datadir)/,$(data-y))
+include-install:=$(addprefix $(includedir)/,$(include-y))
 lib-dynamic-install:=$(addprefix $(libdir)/,$(addsuffix $(dlib-ext:%=.%),$(lib-y)))
 modules-install:=$(addprefix $(pkglibdir)/,$(addsuffix $(dlib-ext:%=.%),$(modules-y)))
 bin-install:=$(addprefix $(bindir)/,$(addsuffix $(bin-ext:%=.%),$(bin-y)))
@@ -211,6 +193,8 @@ sbin-install:=$(addprefix $(sbindir)/,$(addsuffix $(bin-ext:%=.%),$(sbin-y)))
 ##
 # install rules
 ##
+$(include-install): $(includedir)/%: $(src)/%
+	@$(call cmd,install_data)
 $(data-install): $(datadir)/%: $(src)/%
 	@$(call cmd,install_data)
 $(lib-dynamic-install): $(libdir)/lib%$(dlib-ext:%=.%): $(obj)/lib%$(dlib-ext:%=.%)
