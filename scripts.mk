@@ -48,6 +48,8 @@ endif
 # not set variable if not into the build step
 AWK?=awk
 INSTALL?=install
+INSTALL_PROGRAM?=$(INSTALL)
+INSTALL_DATA?=$(INSTALL) -m 644
 ifneq ($(file),)
 CC?=$(CROSS_COMPILE)gcc
 LD?=$(CROSS_COMPILE)gcc
@@ -159,13 +161,13 @@ $(subdir-target): $(SRCTREE:%/=%)/%:
 # Commands for install
 ##
 quiet_cmd_install_data=INSTALL $*
- cmd_install_data=$(INSTALL) -D $< $(DESTDIR:%=%/)$@
+ cmd_install_data=$(INSTALL_DATA) -D $< $(DESTDIR:%=%/)$@
 quiet_cmd_install_modules=INSTALL $*
- cmd_install_modules=$(INSTALL) -D $< $(DESTDIR:%=%/)$@
+ cmd_install_modules=$(INSTALL_PROGRAM) -D $< $(DESTDIR:%=%/)$@
 quiet_cmd_install_dlib=INSTALL $*
- cmd_install_dlib=$(INSTALL) -D $< $(DESTDIR:%=%/)$@
+ cmd_install_dlib=$(INSTALL_PROGRAM) -D $< $(DESTDIR:%=%/)$@
 quiet_cmd_install_bin=INSTALL $*
- cmd_install_bin=$(INSTALL) -D $< $(DESTDIR:%=%/)$@
+ cmd_install_bin=$(INSTALL_PROGRAM) -D $< $(DESTDIR:%=%/)$@
 
 ##
 # install recipes generation
