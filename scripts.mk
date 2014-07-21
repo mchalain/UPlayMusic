@@ -123,7 +123,6 @@ subdir-target+=$(wildcard $(addprefix $(src)/,$(addsuffix /*$(makefile-ext:%=.%)
 subdir-target+=$(if $(strip $(subdir-target)),,$(wildcard $(addprefix $(src)/,$(subdir-y))))
 
 targets:=
-targets+=$(subdir-target)
 targets+=$(lib-static-target)
 targets+=$(modules-target)
 targets+=$(lib-dynamic-target)
@@ -206,31 +205,39 @@ quiet_cmd_config=CONFIG $*
 ##
 # main entries
 ##
-build:=$(if $(action),$(action),_build) -f $(SRCTREE)/scripts.mk file
-
-_build: $(obj)/ $(OBJTREE:%=%/)config.h $(targets)
+action:=_build
+build:=$(action) -f $(SRCTREE)/scripts.mk file
+_build: $(obj)/ $(OBJTREE:%=%/)config.h $(subdir-target) $(targets)
 	@:
 
 _install: $(install)
 	@:
 
-_clean:
-	$(Q)rm -rf $(target-objs)
+_clean: action:=_clean
+_clean: build:=$(action) -f $(SRCTREE)/scripts.mk file
+_clean: $(subdir-target)
+	$(Q)rm -f $(target-objs)
 
-_distclean: _clean
+_distclean: action:=_distclean
+_distclean: build:=$(action) -f $(SRCTREE)/scripts.mk file
+_distclean: $(subdir-target)
+	$(Q)rm -f $(target-objs)
 	$(Q)rm -f $(targets)
+	$(Q)rm -rf $(filter-out $(src),$(obj))
 
 clean: action:=_clean
+clean: build:=$(action) -f $(SRCTREE)/scripts.mk file
 clean: all
 
 distclean: action:=_distclean
+distclean: build:=$(action) -f $(SRCTREE)/scripts.mk file
 distclean: all
 distclean:
 	$(Q)rm -f $(OBJTREE:%=%/)config.h
 
 install: action:=_install
+install: build:=$(action) -f $(SRCTREE)/scripts.mk file
 install: all
 
 $(OBJTREE:%=%/)config.h: $(SRCTREE:%=%/)$(CONFIG)
 	@$(call cmd,config)
-
