@@ -23,6 +23,7 @@ makefile-ext=mk
 # make file with targets definition
 ##
 bin-y:=
+sbin-y:=
 lib-y:=
 slib-y:=
 modules-y:=
@@ -135,11 +136,10 @@ quiet_cmd_ld_dlib=LD $*
 ##
 # objects recipes generation
 ##
-$(foreach t,$(slib-y) $(lib-y) $(bin-y), $(eval $(t)-objs:=$($(t)_SOURCES:%.c=%.o)))
-$(foreach t,$(slib-y) $(lib-y) $(bin-y), $(eval $(t)-objs:=$($(t)_SOURCES:%.c=%.o)))
-target-objs:=$(foreach t, $(slib-y) $(lib-y) $(bin-y) $(modules-y), $(if $($(t)-objs), $(addprefix $(obj)/,$($(t)-objs)), $(obj)/$(t).o))
+$(foreach t,$(slib-y) $(lib-y) $(bin-y) $(sbin-y), $(eval $(t)-objs:=$($(t)_SOURCES:%.c=%.o)))
+target-objs:=$(foreach t, $(slib-y) $(lib-y) $(bin-y) $(sbin-y) $(modules-y), $(if $($(t)-objs), $(addprefix $(obj)/,$($(t)-objs)), $(obj)/$(t).o))
 
-$(foreach t,$(slib-y) $(lib-y) $(bin-y) $(modules-y),$(foreach s, $($(t)_SOURCES),$(eval $(s:%.c=%)_CFLAGS:=$($(t)_CFLAGS))))
+$(foreach t,$(slib-y) $(lib-y) $(bin-y) $(sbin-y) $(modules-y),$(foreach s, $($(t)_SOURCES),$(eval $(s:%.c=%)_CFLAGS:=$($(t)_CFLAGS))))
 
 ##
 # targets recipes generation
@@ -153,7 +153,7 @@ lib-static-target:=$(addprefix $(obj)/,$(addsuffix $(slib-ext:%=.%),$(slib-y)))
 lib-dynamic-target:=$(addprefix $(obj)/,$(addsuffix $(dlib-ext:%=.%),$(lib-y)))
 endif
 modules-target:=$(addprefix $(obj)/,$(addsuffix $(dlib-ext:%=.%),$(modules-y)))
-bin-target:=$(addprefix $(obj)/,$(addsuffix $(bin-ext:%=.%),$(bin-y)))
+bin-target:=$(addprefix $(obj)/,$(addsuffix $(bin-ext:%=.%),$(bin-y) $(sbin-y)))
 subdir-target:=$(wildcard $(addprefix $(src)/,$(addsuffix /Makefile,$(subdir-y))))
 subdir-target+=$(wildcard $(addprefix $(src)/,$(addsuffix /*$(makefile-ext:%=.%),$(subdir-y))))
 subdir-target+=$(if $(strip $(subdir-target)),,$(wildcard $(addprefix $(src)/,$(subdir-y))))
@@ -196,10 +196,6 @@ $(subdir-target): $(SRCTREE:%/=%)/%:
 ##
 quiet_cmd_install_data=INSTALL $*
  cmd_install_data=$(INSTALL_DATA) -D $< $(DESTDIR:%=%/)$@
-quiet_cmd_install_modules=INSTALL $*
- cmd_install_modules=$(INSTALL_PROGRAM) -D $< $(DESTDIR:%=%/)$@
-quiet_cmd_install_dlib=INSTALL $*
- cmd_install_dlib=$(INSTALL_PROGRAM) -D $< $(DESTDIR:%=%/)$@
 quiet_cmd_install_bin=INSTALL $*
  cmd_install_bin=$(INSTALL_PROGRAM) -D $< $(DESTDIR:%=%/)$@
 
@@ -210,6 +206,7 @@ data-install:=$(addprefix $(datadir)/,$(data-y))
 lib-dynamic-install:=$(addprefix $(libdir)/,$(addsuffix $(dlib-ext:%=.%),$(lib-y)))
 modules-install:=$(addprefix $(pkglibdir)/,$(addsuffix $(dlib-ext:%=.%),$(modules-y)))
 bin-install:=$(addprefix $(bindir)/,$(addsuffix $(bin-ext:%=.%),$(bin-y)))
+sbin-install:=$(addprefix $(sbindir)/,$(addsuffix $(bin-ext:%=.%),$(sbin-y)))
 
 ##
 # install rules
@@ -217,13 +214,17 @@ bin-install:=$(addprefix $(bindir)/,$(addsuffix $(bin-ext:%=.%),$(bin-y)))
 $(data-install): $(datadir)/%: $(src)/%
 	@$(call cmd,install_data)
 $(lib-dynamic-install): $(libdir)/lib%$(dlib-ext:%=.%): $(obj)/lib%$(dlib-ext:%=.%)
-	@$(call cmd,install_dlib)
+	@$(call cmd,install_bin)
 $(modules-install): $(pkglibdir)/%$(dlib-ext:%=.%): $(obj)/%$(dlib-ext:%=.%)
-	@$(call cmd,install_modules)
+	@$(call cmd,install_bin)
 $(bin-install): $(bindir)/%$(bin-ext:%=.%): $(obj)/%$(bin-ext:%=.%)
 	@$(call cmd,install_bin)
+$(sbin-install): $(sbindir)/%$(bin-ext:%=.%): $(obj)/%$(bin-ext:%=.%)
+	@$(call cmd,install_bin)
 
-install:=$(bin-install)
+install:=
+install+=$(bin-install)
+install+=$(sbin-install)
 install+=$(lib-dynamic-install)
 install+=$(modules-install)
 install+=$(data-install)
