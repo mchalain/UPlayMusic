@@ -102,7 +102,7 @@ quiet_cmd_ld_dlib=LD $*
 ##
 # objects recipes generation
 ##
-$(foreach t,$(slib-y) $(lib-y) $(bin-y) $(sbin-y), $(eval $(t)-objs:=$($(t)_SOURCES:%.c=%.o)))
+$(foreach t,$(slib-y) $(lib-y) $(bin-y) $(sbin-y) $(modules-y), $(eval $(t)-objs:=$($(t)_SOURCES:%.c=%.o)))
 target-objs:=$(foreach t, $(slib-y) $(lib-y) $(bin-y) $(sbin-y) $(modules-y), $(if $($(t)-objs), $(addprefix $(obj)/,$($(t)-objs)), $(obj)/$(t).o))
 
 $(foreach t,$(slib-y) $(lib-y) $(bin-y) $(sbin-y) $(modules-y),$(foreach s, $($(t)_SOURCES),$(eval $(s:%.c=%)_CFLAGS:=$($(t)_CFLAGS))))
