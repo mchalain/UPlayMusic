@@ -87,7 +87,7 @@ DLIB_SONAME:=-Wl,$(_DLIB_SONAME)
 else
 DLIB_SONAME:=$(_DLIB_SONAME)
 endif
-RPATH=$(wildcard $(addsuffix /.,$(wildcard $(CURDIR:/%=%)/* $(obj)/*)))
+RPATH=$(wildcard $(addsuffix /.,$(wildcard $(CURDIR:%/=%)/* $(obj)/*)))
 quiet_cmd_cc_o_c=CC $*
  cmd_cc_o_c=$(CC) $(CFLAGS) $($*_CFLAGS) -c -o $@ $<
 quiet_cmd_ld_bin=LD $*
