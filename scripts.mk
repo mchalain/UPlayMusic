@@ -74,6 +74,8 @@ ifneq ($(file),)
 #CFLAGS+=$(foreach macro,$(DIRECTORIES_LIST),-D$(macro)=\"$($(macro))\")
 CFLAGS+=-I$(src) -I$(CURDIR) -I.
 LDFLAGS+=-L$(obj) -Wl,-rpath,$(libdir)
+else
+export prefix bindir sbindir libdir includedir datadir pkglibdir srcdir
 endif
 
 ##
