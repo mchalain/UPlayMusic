@@ -51,46 +51,31 @@ AWK?=awk
 INSTALL?=install
 INSTALL_PROGRAM?=$(INSTALL)
 INSTALL_DATA?=$(INSTALL) -m 644
-ifneq ($(file),)
+
 CC?=$(CROSS_COMPILE)gcc
 LD?=$(CROSS_COMPILE)gcc
 AR?=$(CROSS_COMPILE)ar
 RANLIB?=$(CROSS_COMPILE)ranlib
 
-DIRECTORIES_LIST:=
-#PREFIX set into CONFIG
-ifneq ($(PREFIX),)
-prefix:=$(PREFIX:"%"=%)
-else
 prefix?=/usr/local
-PREFIX:=$(prefix:%="%")
-endif
-DIRECTORIES_LIST+=PREFIX
-#DATADIR set into CONFIG
-ifneq ($(DATADIR),)
-datadir:=$(DATADIR)
-else
-datadir?=$(prefix)/share/$(PACKAGE_NAME:"%"=%)
-DATADIR:=$(datadir:%="%")
-endif
-DIRECTORIES_LIST+=DATADIR
-#PKGLIBDIR not set into CONFIG
-ifneq ($(PKGLIBDIR),)
-pkglibdir:=$(PKGLIBDIR)
-else
-pkglibdir?=$(libdir)/$(PACKAGE_NAME:"%"=%)
-PKGLIBDIR:=$(pkglibdir:%="%")
-endif
-DIRECTORIES_LIST+=PKGLIBDIR
-
+prefix:=$(prefix:"%"=%)
 bindir?=$(prefix)/bin
+bindir:=$(bindir:"%"=%)
 sbindir?=$(prefix)/sbin
+sbindir:=$(sbindir:"%"=%)
 libdir?=$(prefix)/lib
+libdir:=$(libdir:"%"=%)
 includedir?=$(prefix)/include
+includedir:=$(includedir:"%"=%)
+datadir?=$(prefix)/share/$(PACKAGE_NAME:"%"=%)
+datadir:=$(datadir:"%"=%)
+pkglibdir?=$(libdir)/$(PACKAGE_NAME:"%"=%)
+pkglibdir:=$(pkglibdir:"%"=%)
 
-CFLAGS+=$(foreach macro,$(DIRECTORIES_LIST),-D$(macro)=\"$($(macro))\")
+ifneq ($(file),)
+#CFLAGS+=$(foreach macro,$(DIRECTORIES_LIST),-D$(macro)=\"$($(macro))\")
 CFLAGS+=-I./$(src) -I./$(OBJTREE) -I.
-LDFLAGS+=-L./$(obj) -Wl,-rpath,$(LIBDIR:"%"=%)
+LDFLAGS+=-L./$(obj) -Wl,-rpath,$(libdir)
 endif
 
 ##
@@ -222,13 +207,12 @@ quote="
 sharp=\#
 quiet_cmd_config=CONFIG $*
  cmd_config=$(AWK) -F= '$$1 != $(quote)$(quote) {print $(quote)$(sharp)define$(space)$(quote)$$1$(quote)$(space)$(quote)$$2}' $< > $@
-
 ##
 # main entries
 ##
 action:=_build
 build:=$(action) -f $(SRCTREE)/scripts.mk file
-_build: $(obj)/ $(OBJTREE:%=%/)config.h $(subdir-target) $(targets)
+_build: $(obj)/ $(OBJTREE:%/=%)/config.h $(subdir-target) $(targets)
 	@:
 
 _install: action:=_install
@@ -262,5 +246,5 @@ install: action:=_install
 install: build:=$(action) -f $(SRCTREE)/scripts.mk file
 install: all
 
-$(OBJTREE:%=%/)config.h: $(SRCTREE:%=%/)$(CONFIG)
+$(OBJTREE:%/=%)/$(CONFIG).h: $(SRCTREE:%/=%)/$(CONFIG)
 	@$(call cmd,config)

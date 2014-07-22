@@ -7,17 +7,18 @@ RANLIB=$(CROSS_COMPILE)ranlib
 MAKE=make
 export CC LD AR RANLIB MAKE
 
-#CFLAGS=-g
-CFLAGS+=-g -DDEBUG -DHAVE_CONFIG_H -DPILOT_MODULES -I$(SRCTREE:%=%/)include
-STATIC=
-export CFLAGS STATIC
-
 DEFAULT: all
 
 CONFIG=config
 export CONFIG
 
 include $(SRCTREE:%=%/)scripts.mk
+
+#CFLAGS=-g
+CFLAGS+=-g -DDEBUG -DHAVE_CONFIG_H -DPILOT_MODULES -I$(SRCTREE:%=%/)include
+STATIC=
+CFLAGS+=-DPREFIX="\"$(prefix)\"" -DDATADIR="\"$(datadir)\"" -DPKGLIBDIR="\"$(pkglibdir)\""
+export CFLAGS STATIC
 
 all:
 	$(Q)$(MAKE) $(build)=src/application.mk
