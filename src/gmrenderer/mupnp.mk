@@ -12,7 +12,7 @@ xmlescape.c \
 variable-container.c \
 output.c \
 song-meta-data.c
-
+mupnp_LIBRARY:= upnp
 #mupnp_SOURCES+=logging.c
 
 lib-$(CONFIG_WEBSERVER_MUPNP)+=webserver

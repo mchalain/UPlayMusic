@@ -1,5 +1,5 @@
 sbin-y+=upme
-upme_LIBRARY=pilot_atk pilot_mods upme_modules mupnp webserver upnp $(if $(HAVE_LIBM),m)
+upme_LIBRARY=pilot_atk pilot_mods upme_modules mupnp webserver $(if $(HAVE_LIBM),m)
 upme_SOURCES:= \
 pilot_main.c
 
