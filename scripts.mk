@@ -29,18 +29,16 @@ slib-y:=
 modules-y:=
 data-y:=
 
-SRCTREE?=$(dir $(realpath $(firstword $(MAKEFILE_LIST))))
-OBJTREE?=$(CURDIR)/
-export SRCTREE OBJTREE
+srcdir?=$(dir $(realpath $(firstword $(MAKEFILE_LIST))))
 ifneq ($(CONFIG),)
-include $(SRCTREE:%/=%)/$(CONFIG)
+include $(srcdir:%/=%)/$(CONFIG)
 	# CONFIG could define LD CC or/and CFLAGS
 	# CONFIG must be included before "Commands for build and link"
 endif
 ifneq ($(file),)
-include $(SRCTREE:%/=%)/$(file)
-src=$(patsubst %/,%,$(SRCTREE:%/=%)/$(dir $(file)))
-obj=$(patsubst %/,%,$(OBJTREE:%/=%)/$(dir $(file)))
+include $(srcdir:%/=%)/$(file)
+src=$(patsubst %/,%,$(srcdir:%/=%)/$(dir $(file)))
+obj=$(patsubst %/,%,$(CURDIR:%/=%)/$(dir $(file)))
 endif
 
 ##
@@ -74,8 +72,8 @@ pkglibdir:=$(pkglibdir:"%"=%)
 
 ifneq ($(file),)
 #CFLAGS+=$(foreach macro,$(DIRECTORIES_LIST),-D$(macro)=\"$($(macro))\")
-CFLAGS+=-I./$(src) -I./$(OBJTREE) -I.
-LDFLAGS+=-L./$(obj) -Wl,-rpath,$(libdir)
+CFLAGS+=-I$(src) -I$(CURDIR) -I.
+LDFLAGS+=-L$(obj) -Wl,-rpath,$(libdir)
 endif
 
 ##
@@ -87,7 +85,7 @@ DLIB_SONAME:=-Wl,$(_DLIB_SONAME)
 else
 DLIB_SONAME:=$(_DLIB_SONAME)
 endif
-RPATH=$(wildcard $(addsuffix /.,$(wildcard $(OBJTREE:%=%/)* $(obj)/*)))
+RPATH=$(wildcard $(addsuffix /.,$(wildcard $(CURDIR:/%=%)/* $(obj)/*)))
 quiet_cmd_cc_o_c=CC $*
  cmd_cc_o_c=$(CC) $(CFLAGS) $($*_CFLAGS) -c -o $@ $<
 quiet_cmd_ld_bin=LD $*
@@ -155,7 +153,7 @@ $(bin-target): $(obj)/%$(bin-ext:%=.%): $$(if $$(%-objs), $$(addprefix $(obj)/,$
 	@$(call cmd,ld_bin)
 
 .PHONY:$(subdir-target)
-$(subdir-target): $(SRCTREE:%/=%)/%:
+$(subdir-target): $(srcdir:%/=%)/%:
 	$(Q)$(MAKE) $(build)=$*
 ##
 # Commands for install
@@ -211,40 +209,40 @@ quiet_cmd_config=CONFIG $*
 # main entries
 ##
 action:=_build
-build:=$(action) -f $(SRCTREE)/scripts.mk file
-_build: $(obj)/ $(OBJTREE:%/=%)/config.h $(subdir-target) $(targets)
+build:=$(action) -f $(srcdir)/scripts.mk file
+_build: $(obj)/ $(CURDIR:%/=%)/config.h $(subdir-target) $(targets)
 	@:
 
 _install: action:=_install
-_install: build:=$(action) -f $(SRCTREE)/scripts.mk file
+_install: build:=$(action) -f $(srcdir)/scripts.mk file
 _install: $(install) $(subdir-target)
 	@:
 
 _clean: action:=_clean
-_clean: build:=$(action) -f $(SRCTREE)/scripts.mk file
+_clean: build:=$(action) -f $(srcdir)/scripts.mk file
 _clean: $(subdir-target)
 	$(Q)rm -f $(target-objs)
 
 _distclean: action:=_distclean
-_distclean: build:=$(action) -f $(SRCTREE)/scripts.mk file
+_distclean: build:=$(action) -f $(srcdir)/scripts.mk file
 _distclean: $(subdir-target)
 	$(Q)rm -f $(target-objs)
 	$(Q)rm -f $(targets)
 	$(Q)rm -rf $(filter-out $(src),$(obj))
 
 clean: action:=_clean
-clean: build:=$(action) -f $(SRCTREE)/scripts.mk file
+clean: build:=$(action) -f $(srcdir)/scripts.mk file
 clean: all
 
 distclean: action:=_distclean
-distclean: build:=$(action) -f $(SRCTREE)/scripts.mk file
+distclean: build:=$(action) -f $(srcdir)/scripts.mk file
 distclean: all
 distclean:
-	$(Q)rm -f $(OBJTREE:%=%/)config.h
+	$(Q)rm -f $(CURDIR:/%=%)/config.h
 
 install: action:=_install
-install: build:=$(action) -f $(SRCTREE)/scripts.mk file
+install: build:=$(action) -f $(srcdir)/scripts.mk file
 install: all
 
-$(OBJTREE:%/=%)/$(CONFIG).h: $(SRCTREE:%/=%)/$(CONFIG)
+$(CURDIR:%/=%)/$(CONFIG).h: $(srcdir:%/=%)/$(CONFIG)
 	@$(call cmd,config)

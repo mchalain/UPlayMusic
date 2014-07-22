@@ -1,4 +1,4 @@
-SRCTREE=$(dir $(realpath $(lastword $(MAKEFILE_LIST))))
+srcdir=$(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 
 CC=$(CROSS_COMPILE)gcc
 LD=$(CROSS_COMPILE)gcc
@@ -12,10 +12,10 @@ DEFAULT: all
 CONFIG=config
 export CONFIG
 
-include $(SRCTREE:%=%/)scripts.mk
+include $(srcdir:%=%/)scripts.mk
 
 #CFLAGS=-g
-CFLAGS+=-g -DDEBUG -DHAVE_CONFIG_H -DPILOT_MODULES -I$(SRCTREE:%=%/)include
+CFLAGS+=-g -DDEBUG -DHAVE_CONFIG_H -DPILOT_MODULES -I$(srcdir:%=%/)include
 STATIC=
 CFLAGS+=-DPREFIX="\"$(prefix)\"" -DDATADIR="\"$(datadir)\"" -DPKGLIBDIR="\"$(pkglibdir)\""
 export CFLAGS STATIC
