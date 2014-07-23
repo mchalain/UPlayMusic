@@ -1,3 +1,5 @@
+ifeq ($(inside_makemore),)
+inside_makemore:=yes
 ##
 # debug tools
 ##
@@ -30,6 +32,7 @@ modules-y:=
 data-y:=
 
 srcdir?=$(dir $(realpath $(firstword $(MAKEFILE_LIST))))
+file?=$(notdir $(firstword $(MAKEFILE_LIST)))
 ifneq ($(CONFIG),)
 include $(srcdir:%/=%)/$(CONFIG)
 	# CONFIG could define LD CC or/and CFLAGS
@@ -54,6 +57,11 @@ CC?=$(CROSS_COMPILE)gcc
 LD?=$(CROSS_COMPILE)gcc
 AR?=$(CROSS_COMPILE)ar
 RANLIB?=$(CROSS_COMPILE)ranlib
+ifeq ($(findstring gcc,$(LD)),gcc)
+ldgcc=-Wl,$(1),$(2)
+else
+ldgcc=$(1) $(2)
+endif
 
 prefix?=/usr/local
 prefix:=$(prefix:"%"=%)
@@ -73,31 +81,10 @@ pkglibdir:=$(pkglibdir:"%"=%)
 ifneq ($(file),)
 #CFLAGS+=$(foreach macro,$(DIRECTORIES_LIST),-D$(macro)=\"$($(macro))\")
 CFLAGS+=-I$(src) -I$(CURDIR) -I.
-LDFLAGS+=-L$(obj) -Wl,-rpath,$(libdir)
+LDFLAGS+=-L$(obj) $(call ldgcc,-rpath,$(libdir))
 else
 export prefix bindir sbindir libdir includedir datadir pkglibdir srcdir
 endif
-
-##
-# Commands for build and link
-##
-_DLIB_SONAME:=-soname
-ifeq ($(findstring gcc,$(LD)),gcc)
-DLIB_SONAME:=-Wl,$(_DLIB_SONAME)
-else
-DLIB_SONAME:=$(_DLIB_SONAME)
-endif
-RPATH=$(wildcard $(addsuffix /.,$(wildcard $(CURDIR:%/=%)/* $(obj)/*)))
-quiet_cmd_cc_o_c=CC $*
- cmd_cc_o_c=$(CC) $(CFLAGS) $($*_CFLAGS) -c -o $@ $<
-quiet_cmd_ld_bin=LD $*
- cmd_ld_bin=$(LD) $(LDFLAGS) $($*_LDFLAGS) -o $@ $^ $(addprefix -L,$(RPATH)) $(LIBRARY:%=-l%) $($*_LIBRARY:%=-l%)
-quiet_cmd_ld_slib=LD $*
- cmd_ld_slib=$(RM) $@ && \
-	$(AR) -cvq $@ $^ > /dev/null && \
-	$(RANLIB) $@
-quiet_cmd_ld_dlib=LD $*
- cmd_ld_dlib=$(LD) $(LDFLAGS) $($*_LDFLAGS) -shared $(DLIB_SONAME),$(notdir $@) -o $@ $^ $(addprefix -L,$(RPATH)) $(LIBRARY:%=-l%) $($*_LIBRARY:%=-l%)
 
 ##
 # objects recipes generation
@@ -131,15 +118,104 @@ targets+=$(lib-dynamic-target)
 targets+=$(bin-target)
 
 ##
+# install recipes generation
+##
+data-install:=$(addprefix $(datadir)/,$(data-y))
+include-install:=$(addprefix $(includedir)/,$(include-y))
+lib-dynamic-install:=$(addprefix $(libdir)/,$(addsuffix $(dlib-ext:%=.%),$(lib-y)))
+modules-install:=$(addprefix $(pkglibdir)/,$(addsuffix $(dlib-ext:%=.%),$(modules-y)))
+bin-install:=$(addprefix $(bindir)/,$(addsuffix $(bin-ext:%=.%),$(bin-y)))
+sbin-install:=$(addprefix $(sbindir)/,$(addsuffix $(bin-ext:%=.%),$(sbin-y)))
+
+install:=
+install+=$(bin-install)
+install+=$(sbin-install)
+install+=$(lib-dynamic-install)
+install+=$(modules-install)
+install+=$(data-install)
+
+##
+# main entries
+##
+action:=_build
+build:=$(action) -f $(srcdir)/scripts.mk file
+.PHONY:_entry _build _install _clean _distclean
+_entry: default_action
+
+_build: $(obj)/ $(if $(wildcard $(CONFIG)),$(join $(CURDIR:%/=%)/,$(CONFIG:%=%.h))) $(subdir-target) $(targets)
+	@:
+
+_install: action:=_install
+_install: build:=$(action) -f $(srcdir)/scripts.mk file
+_install: $(install) $(subdir-target)
+	@:
+
+_clean: action:=_clean
+_clean: build:=$(action) -f $(srcdir)/scripts.mk file
+_clean: $(subdir-target) _clean_objs
+
+_clean_objs:
+	$(Q)$(call cmd,clean,$(wildcard $(target-objs)))
+
+_distclean: action:=_distclean
+_distclean: build:=$(action) -f $(srcdir)/scripts.mk file
+_distclean: $(subdir-target) _clean_objs
+	$(Q)$(call cmd,clean,$(wildcard $(targets)))
+	$(Q)$(call cmd,clean_dir,$(filter-out $(src),$(obj)))
+
+clean: action:=_clean
+clean: build:=$(action) -f $(srcdir)/scripts.mk file
+clean: $(.DEFAULT_GOAL)
+
+distclean: action:=_distclean
+distclean: build:=$(action) -f $(srcdir)/scripts.mk file
+distclean: $(.DEFAULT_GOAL)
+distclean:
+	$(Q)$(call cmd,clean,$(wildcard $(CURDIR:/%=%)/$(CONFIG:%=%.h)))
+
+install: action:=_install
+install: build:=$(action) -f $(srcdir)/scripts.mk file
+install: $(.DEFAULT_GOAL)
+
+default_action:
+	$(Q)$(MAKE) $(build)=$(file)
+	@:
+
+$(join $(CURDIR:%/=%)/,$(CONFIG:%=%.h)): $(srcdir:%/=%)/$(CONFIG)
+	@$(call cmd,config)
+
+##
+# Commands for clean
+##
+quiet_cmd_clean=$(if $(2),CLEAN  $(notdir $(2)))
+ cmd_clean=$(if $(2),$(RM) $(2))
+quiet_cmd_clean_dir=$(if $(2),CLEAN $(notdir $(2)))
+ cmd_clean_dir=$(if $(2),$(RM) -r $(2))
+##
+# Commands for build and link
+##
+RPATH=$(wildcard $(addsuffix /.,$(wildcard $(CURDIR:%/=%)/* $(obj)/*)))
+quiet_cmd_cc_o_c=CC $*
+ cmd_cc_o_c=$(CC) $(CFLAGS) $($*_CFLAGS) -c -o $@ $<
+quiet_cmd_ld_bin=LD $*
+ cmd_ld_bin=$(LD) $(LDFLAGS) $($*_LDFLAGS) -o $@ $^ $(addprefix -L,$(RPATH)) $(LIBRARY:%=-l%) $($*_LIBRARY:%=-l%)
+quiet_cmd_ld_slib=LD $*
+ cmd_ld_slib=$(RM) $@ && \
+	$(AR) -cvq $@ $^ > /dev/null && \
+	$(RANLIB) $@
+quiet_cmd_ld_dlib=LD $*
+ cmd_ld_dlib=$(LD) $(LDFLAGS) $($*_LDFLAGS) -shared $(call ldgcc,-soname,$(notdir $@)) -o $@ $^ $(addprefix -L,$(RPATH)) $(LIBRARY:%=-l%) $($*_LIBRARY:%=-l%)
+
+##
 # build rules
 ##
+.SECONDEXPANSION:
 $(obj)/%.o:$(src)/%.c
 	@$(call cmd,cc_o_c)
 
 $(obj)/:
 	$(Q)mkdir -p $@
 
-.SECONDEXPANSION:
 $(lib-static-target): $(obj)/lib%$(slib-ext:%=.%): $$(if $$(%-objs), $$(addprefix $(obj)/,$$(%-objs)), $(obj)/%.o)
 	@$(call cmd,ld_slib)
 
@@ -166,16 +242,6 @@ quiet_cmd_install_bin=INSTALL $*
  cmd_install_bin=$(INSTALL_PROGRAM) -D $< $(DESTDIR:%=%/)$@
 
 ##
-# install recipes generation
-##
-data-install:=$(addprefix $(datadir)/,$(data-y))
-include-install:=$(addprefix $(includedir)/,$(include-y))
-lib-dynamic-install:=$(addprefix $(libdir)/,$(addsuffix $(dlib-ext:%=.%),$(lib-y)))
-modules-install:=$(addprefix $(pkglibdir)/,$(addsuffix $(dlib-ext:%=.%),$(modules-y)))
-bin-install:=$(addprefix $(bindir)/,$(addsuffix $(bin-ext:%=.%),$(bin-y)))
-sbin-install:=$(addprefix $(sbindir)/,$(addsuffix $(bin-ext:%=.%),$(sbin-y)))
-
-##
 # install rules
 ##
 $(include-install): $(includedir)/%: $(src)/%
@@ -191,13 +257,6 @@ $(bin-install): $(bindir)/%$(bin-ext:%=.%): $(obj)/%$(bin-ext:%=.%)
 $(sbin-install): $(sbindir)/%$(bin-ext:%=.%): $(obj)/%$(bin-ext:%=.%)
 	@$(call cmd,install_bin)
 
-install:=
-install+=$(bin-install)
-install+=$(sbin-install)
-install+=$(lib-dynamic-install)
-install+=$(modules-install)
-install+=$(data-install)
-
 ##
 # commands for configuration
 ##
@@ -207,44 +266,4 @@ quote="
 sharp=\#
 quiet_cmd_config=CONFIG $*
  cmd_config=$(AWK) -F= '$$1 != $(quote)$(quote) {print $(quote)$(sharp)define$(space)$(quote)$$1$(quote)$(space)$(quote)$$2}' $< > $@
-##
-# main entries
-##
-action:=_build
-build:=$(action) -f $(srcdir)/scripts.mk file
-_build: $(obj)/ $(CURDIR:%/=%)/config.h $(subdir-target) $(targets)
-	@:
-
-_install: action:=_install
-_install: build:=$(action) -f $(srcdir)/scripts.mk file
-_install: $(install) $(subdir-target)
-	@:
-
-_clean: action:=_clean
-_clean: build:=$(action) -f $(srcdir)/scripts.mk file
-_clean: $(subdir-target)
-	$(Q)rm -f $(target-objs)
-
-_distclean: action:=_distclean
-_distclean: build:=$(action) -f $(srcdir)/scripts.mk file
-_distclean: $(subdir-target)
-	$(Q)rm -f $(target-objs)
-	$(Q)rm -f $(targets)
-	$(Q)rm -rf $(filter-out $(src),$(obj))
-
-clean: action:=_clean
-clean: build:=$(action) -f $(srcdir)/scripts.mk file
-clean: all
-
-distclean: action:=_distclean
-distclean: build:=$(action) -f $(srcdir)/scripts.mk file
-distclean: all
-distclean:
-	$(Q)rm -f $(CURDIR:/%=%)/config.h
-
-install: action:=_install
-install: build:=$(action) -f $(srcdir)/scripts.mk file
-install: all
-
-$(CURDIR:%/=%)/$(CONFIG).h: $(srcdir:%/=%)/$(CONFIG)
-	@$(call cmd,config)
+endif
