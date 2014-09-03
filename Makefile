@@ -1,3 +1,6 @@
+prefix=/opt/upme
+datadir=$(prefix)/data
+pkglibdir=$(prefix)/extensions
 srcdir=$(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 
 CC=$(CROSS_COMPILE)gcc
