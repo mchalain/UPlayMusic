@@ -20,7 +20,7 @@ include $(srcdir:%=%/)scripts.mk
 #CFLAGS=-g
 CFLAGS+=-g -DDEBUG -DHAVE_CONFIG_H -DPILOT_MODULES -I$(srcdir:%=%/)include
 STATIC=
-CFLAGS+=-DPREFIX="\"$(prefix)\"" -DDATADIR="\"$(datadir)\"" -DPKGLIBDIR="\"$(pkglibdir)\""
+CFLAGS+=-DPREFIX="\"$(prefix)\"" -DDATADIR="\"$(datadir)\"" -DPKGLIBDIR="\"$(pkglibdir)\"" -DPILOT_SDK
 export CFLAGS STATIC
 
 all:

@@ -6,7 +6,7 @@
 struct sound_module
 {
 	int (*open)(int channels, int encoding, long rate);
-	int (*write)(char *buffer, int buffsize);
+	int (*write)(char *buffer, ssize_t buffsize);
 	int (*close)(void);
 	int (*get_volume)(float *);
 	int (*set_volume)(float);
