@@ -4,6 +4,7 @@ upme_SOURCES:= \
 pilot_main.c \
 config.c
 
-subdir-y+=gmrenderer/mupnp.mk
+subdir-$(CONFIG_GMRENDERER)+=gmrenderer/mupnp.mk
+subdir-$(CONFIG_DLNARENDERER)+=dlnarenderer/mupnp.mk
 subdir-y+=pilot_atk/pilot_atk.mk
 subdir-y+=pilot_mods/pilot_mods.mk
