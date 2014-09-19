@@ -124,12 +124,11 @@ struct upnp {
 	struct upnp_device *device;
 };
 
-struct upnp * upnp_start(char *friendly_name,
-							char *uuid,
-							char *serial_number,
-							char *ip_address,
-							int listen_port,
-							char *output);
-void upnp_stop(struct upnp *upnp);
+void * upnp_start(char *friendly_name,
+                        char *uuid,
+                        char *serial_number,
+                        char *ip_address,
+                        int listen_port);
+void upnp_stop(void *data);
 
 #endif /* _UPNP_H */

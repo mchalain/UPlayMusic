@@ -12,7 +12,9 @@ xmlescape.c \
 variable-container.c \
 output.c \
 song-meta-data.c
-mupnp_LIBRARY:= upnp webserver
+mupnp_LIBRARY:= upnp mupnp_modules webserver pilot_mods
 
 lib-$(CONFIG_WEBSERVER_MUPNP)+=webserver
 webserver_CFLAGS:=-std=gnu99 -DPILOT_LOGGING
+
+subdir-y+=modules

@@ -44,6 +44,7 @@
 #include "upnp_device.h"
 #include "upnp_renderer.h"
 #include "upnp_transport.h"
+#include "sound_module.h"
 
 static const char *param_datatype_names[] = {
         [DATATYPE_STRING] =     "string",
@@ -258,7 +259,28 @@ static void init_logging(const char *log_file) {
 	}
 }
 
-struct upnp * upnp_start(char *name, char *uuid, char *serial_number, char *ip_address, int listen_port, char *output)
+char *g_output_module = NULL;
+char *g_sound_module = NULL;
+extern void config_read(char *section, int (*check)(char*, int));
+
+int
+gmrenderer_check(char *line, int len)
+{
+	int ret = 0;
+	char *value = malloc(len + 1);
+	if (sscanf(line,"output=\"%[^\"]", value))
+	{
+		g_output_module = value;
+	}
+	else if (sscanf(line,"sound=\"%[^\"]", value))
+	{
+		g_sound_module = value;
+	}
+	
+	return ret;
+}
+
+void * upnp_start(char *name, char *uuid, char *serial_number, char *ip_address, int listen_port)
 {
 	struct upnp *upnp;
 	const char *log_file = "/tmp/mupnp.log";
@@ -274,7 +296,13 @@ struct upnp * upnp_start(char *name, char *uuid, char *serial_number, char *ip_a
 		return NULL;
 	}
 
-	if (output_init(output) != 0) {
+	config_read("upme",gmrenderer_check);
+        if (!g_output_module || !g_sound_module)
+                return NULL;
+
+        sound_module_set(g_sound_module);
+
+	if (output_init(g_output_module) != 0) {
 		Log_error("main",
 			  "ERROR: Failed to initialize Output subsystem");
 		return NULL;
@@ -307,11 +335,12 @@ struct upnp * upnp_start(char *name, char *uuid, char *serial_number, char *ip_a
 							(void*) "control");
 	}
 
-	return upnp;
+	return (void *)upnp;
 }
 
-void upnp_stop(struct upnp *upnp)
+void upnp_stop(void *data)
 {
+        struct upnp *upnp = (struct upnp *)data;
 	if (upnp)
 	{
 		upnp_device_shutdown(upnp->device);

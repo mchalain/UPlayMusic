@@ -25,6 +25,5 @@ export CFLAGS STATIC
 
 all:
 	$(Q)$(MAKE) $(build)=src/application.mk
-	$(Q)$(MAKE) $(build)=src/modules.mk
 
 	$(Q)$(MAKE) $(build)=data/conf.mk
