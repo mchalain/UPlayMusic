@@ -1,4 +1,4 @@
-lib-$(CONFIG_PILOT_ATK)+=pilot_atk
+slib-$(CONFIG_PILOT_ATK)+=pilot_atk
 pilot_atk_SOURCES=pilot_application.c
 pilot_atk_$(CONFIG_PILOT_TIMER)+=pilot_timer.c
 pilot_atk_SOURCES+=$(pilot_atk_y)
